@@ -1,0 +1,19 @@
+---
+doctype: html5
+parameters:
+  blurb: str
+---
+target: Ruby
+module: Test
+class: Test2
+imports:
+  CurlyCurly::Core::String.trim: trim
+---
+target: Java15
+class: name.maxaller.TestCurly2
+imports:
+  com.curlycurly.core.String.trim: trim
+---
+<div>
+  {{= blurb | trim}}
+</div>

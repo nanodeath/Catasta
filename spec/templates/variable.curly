@@ -1,0 +1,12 @@
+---
+parameters:
+  variable: str
+---
+target: Ruby
+module: Test
+class: Test1
+---
+target: Java15
+class: name.maxaller.TestCurly
+---
+This template has {{= variable}} content.

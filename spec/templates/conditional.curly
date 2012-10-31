@@ -1,0 +1,14 @@
+---
+parameters:
+  str: str
+---
+target: Ruby
+module: Test
+class: Test1
+---
+target: Java15
+class: name.maxaller.TestCurly
+---
+{{if str}}
+    Hello {{= str}}
+{{/if}}
