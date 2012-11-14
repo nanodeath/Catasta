@@ -1,45 +1,61 @@
 require 'fileutils'
 require 'erb'
+require 'active_support/inflector'
 
 module CurlyCurly::Ruby
   class Writer
-    def initialize(config, imports, code_tree, class_code)
-      @config = config
-      template_path = "ruby/writer_template.erb"
-      @template = ERB.new(File.read(template_path), nil, "<>")
-      @template.filename = template_path
-
-      @imports = imports
-      @code_tree = code_tree
-      @class_code = class_code
+    attr_reader :writer_template
+    def initialize
+      writer_template_path = "ruby/writer_template.erb"
+      @writer_template = ERB.new(File.read(writer_template_path), nil, "<>")
+      @writer_template.filename = writer_template_path
     end
-    
-    def write(destination={})
-      out = @config["out"] || "build/ruby"
-      if(destination[:to_directory])
-        out = File.join(out, destination[:to_directory])
-      end
-      the_module = (@config["module"] || "").split("::")
-      the_class = (@config["class"] || "Template")
-      header = @config["header"]
-      file = if(destination[:to_file])
-        destination[:to_file]
-      else
-        File.join(out, the_module, the_class + ".rb")
-      end
-      FileUtils.mkdir_p(File.dirname(file))
 
-      methods = [
-        ArrayBuffer.new(self)
-      ].map {|mg| mg.generate(@code_tree)}
-      body = methods.join("\n")
-      imports = @imports.to_a.sort.map {|i| %{import "#{i}"}}.join("\n")
-      class_code = @class_code
+    def process(destination, generated, config)
+      Instance.new(self, destination, generated, config).result
+    end
 
-      if(file == "-")
-        puts @template.result(binding)
-      else
-        File.open(file, 'w') {|f| f.write(@template.result(binding))}
+    class Instance
+      def initialize(writer, destination, generated, config)
+        @destination = destination
+        @writer = writer
+        @generated = generated
+        @config = config
+        process
+      end
+
+      def process
+        imports = @generated[:imports]
+        code_tree = @generated[:code]
+
+        out = @config["out"] || "build/ruby"
+        if(@destination[:to_directory])
+          out = File.join(out, @destination[:to_directory])
+        end
+        relative_path = Pathname.new(@writer.writer_template.path).relative_path_from(Pathname.new(template.template_processor.root_folder))
+        the_module = relative_path.dirname.to_s.split("/")[1..-1]
+        the_class = relative_path.basename(".cts").to_s
+        header = config["header"]
+        file = if(@destination[:to_file])
+          @destination[:to_file]
+        else
+          File.join(out, the_module, the_class + ".rb")
+        end
+        the_module = the_module.map {|m| m.camelize}
+        the_class = the_class.camelize
+        FileUtils.mkdir_p(File.dirname(file))
+
+        methods = [
+          ArrayBuffer.new(self)
+        ].map {|mg| mg.generate(code_tree)}
+        body = methods.join("\n")
+        imports = imports.to_a.sort.map {|i| %{import "#{i}"}}.join("\n")
+
+        if(file == "-")
+          puts @writer.template.result(binding)
+        else
+          File.open(file, 'w') {|f| f.write(@writer.writer_template.result(binding))}
+        end
       end
     end
   end

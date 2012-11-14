@@ -1,6 +1,6 @@
-require_relative 'generator'
+require_relative '../common/generator'
 require_relative 'scoping'
-require_relative 'type_renderer'
+#require_relative 'type_renderer'
 require "set"
 
 module CurlyCurly::Javascript5
@@ -14,7 +14,6 @@ class Generator < CurlyCurly::Generator
       # Initialization
       # Should happen only once per top-level call to #parse
       @scopes = []
-      @type_renderer = TypeRenderer.new
       @class_code = []
       if @config.has_key? "parameters"
         scope = ArgumentScope.new
@@ -30,7 +29,7 @@ class Generator < CurlyCurly::Generator
         @filters = {}
       end
       code = node.children.map {|s| parse(s)}
-      {imports: @imports, code: code, class_code: @class_code }
+      {code: code, class_code: @class_code }
     when CurlyCurly::Node::Text
       [:text, sanitize(node.text)]
     when CurlyCurly::Node::IterateList
@@ -49,15 +48,20 @@ class Generator < CurlyCurly::Generator
       @scopes << scope
       result = [
         [:code, %|for(var i_#{loop_var} = 0; i_#{loop_var} < #{coll_resolved}.length; i_#{loop_var}++){|],
-          [:indent],
-          node.children.map {|s| parse(s)},
+          [:indent]
+      ]
+      body = node.children.map {|s| parse(s)}
+      if scope.get_resolve_count(loop_var) > 0
+        result << [:code, %|var #{loop_var} = #{coll_resolved}[i_#{loop_var}];|]
+      end
+      result += [
+          body,
           [:unindent],
         [:code, "}"]
       ]
       @scopes.pop
       result
     when CurlyCurly::Node::IterateMap
-      @imports << "java.util.Map"
       coll = node.collection
       key_var = node.loop_var_key
       value_var = node.loop_var_value
@@ -73,11 +77,10 @@ class Generator < CurlyCurly::Generator
       scope[value_var] = value_type
       @scopes << scope
       
-      generic_bits = %|<#{@type_renderer.simple_name(key_type)}, #{@type_renderer.simple_name(value_type)}>|
       result = [
-        [:code, %|for(var #{key_var} in #{col1_resolved}){|],
+        [:code, %|for(var #{key_var} in #{coll_resolved}){|],
           [:indent],
-          [:code, %|if(!#{col1_resolved}.hasOwnProperty(#{key_var})){|],
+          [:code, %|if(!#{coll_resolved}.hasOwnProperty(#{key_var})){|],
             [:indent],
             [:code, %|continue;|],
             [:unindent],
@@ -85,7 +88,7 @@ class Generator < CurlyCurly::Generator
       ]
       body = node.children.map {|s| parse(s)}
       if scope.get_resolve_count(value_var) > 0
-        result << [:code, %|var #{value_var} = #{col1_resolved}[#{key_var}];|]
+        result << [:code, %|var #{value_var} = #{coll_resolved}[#{key_var}];|]
       end
       result += [
           body,
@@ -105,34 +108,33 @@ class Generator < CurlyCurly::Generator
       scope = lookup_scope(var)
       resolved = scope.resolve(var)
       type = scope.get_type(var)
-      type_string = @type_renderer.simple_name(type)
+      #type_string = @type_renderer.simple_name(type)
       top = case type
       when CurlyCurly::Integer
         if positive
-          "if(!(Integer.valueOf(0).equals(#{resolved}))) {"
+          "if(#{resolved} !== 0) {"
         else
-          "if(Integer.valueOf(0).equals(#{resolved}))) {"
+          "if(#{resolved} === 0) {"
         end
       when CurlyCurly::String
         # Java 1.6 introduced String#isEmpty
         if positive
-          %|if(!"".equals(#{resolved})) {|
+          %|if(#{resolved} !== "") {|
         else
-          %|if("".equals(#{resolved})) {|
+          %|if(#{resolved} === "") {|
         end
       when CurlyCurly::Map
-        @imports << "java.util.Map"
         if positive
-          "if(#{resolved} != null && !((#{type_string})#{resolved}).isEmpty()) {"
+          # FIXME
+          "if(#{resolved} !== null && Object.keys(#{resolved}).length > 0) {"
         else
-          "if(#{resolved} == null || ((#{type_string})#{resolved}).isEmpty()) {"
+          "if(#{resolved} === null || (Object.keys(#{resolved}).length < 1) {"
         end
       when CurlyCurly::List
-        @imports << "java.util.List"
         if positive
-          "if(#{resolved} != null && ((#{type_string})#{resolved}).isEmpty()) {"
+          "if(#{resolved} !== null && #{resolved}.length > 0) {"
         else
-          "if(#{resolved} == null || !((#{type_string})#{resolved}).isEmpty()) {"
+          "if(#{resolved} === null || #{resolved}.length < 1) {"
         end
       else
         raise "Unexpected type in conditional: `#{scope.get_type(var)}`"
@@ -165,10 +167,8 @@ class Generator < CurlyCurly::Generator
       parts = var.split(".")
       scope = lookup_scope(parts[0])
       raise "Invalid target for property lookup" unless scope.get_type(parts[0]).is_a? CurlyCurly::Object
-      @imports << "com.curlycurly.core.PojoExtractor"
-      @class_code << "private static final PojoExtractor _extractor = new PojoExtractor();"
       args = [parts[0]] + parts.drop(1).map {|p| %{"#{p}"}}
-      ["_extractor.extract(#{args.join(", ")})", CurlyCurly::Unknown.new]
+      [var, CurlyCurly::Unknown.new]
     else
       raise "Can't evaluate `#{var}`"
     end

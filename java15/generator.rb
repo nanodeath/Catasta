@@ -1,4 +1,4 @@
-require_relative 'generator'
+require_relative '../common/generator'
 require_relative 'scoping'
 require_relative 'type_renderer'
 require "set"

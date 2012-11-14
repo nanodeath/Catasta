@@ -2,6 +2,7 @@ require 'yaml'
 require 'benchmark'
 require 'optparse'
 require 'pathname'
+require 'pry' 
 
 require 'term/ansicolor'
 class String
@@ -12,9 +13,11 @@ require_relative 'common/parser'
 require_relative 'optimizers/adjacent_text_optimizer'
 require_relative 'ruby/generator'
 require_relative 'ruby/writer'
+require_relative 'ruby/template'
 require_relative 'java15/generator'
 require_relative 'java15/writer'
 require_relative 'javascript5/generator'
+require_relative 'javascript5/writer'
 
 module CurlyCurly
   VERSION = "0.1"
@@ -33,6 +36,122 @@ module CurlyCurly
     private
     def line_number_to_key(line_number)
       :"line_#{line_number}"
+    end
+  end
+
+  class Catasta
+    attr_reader :input_folder
+    attr_reader :config
+    attr_reader :output
+    attr_reader :generators
+    attr_reader :writers
+
+    def initialize(input_folder, output, ops={})
+      @input_folder = input_folder
+      @output = output
+      @ops = ops
+
+      @config = if File.exist?(File.join(@input_folder, "catasta.yml"))
+        YAML::load(File.read(File.join(@input_folder, "catasta.yml"))).merge(@ops)
+      else
+        @ops
+      end
+
+      # validate
+      if !File.directory? @input_folder
+        raise "#{@input_folder} doesn't exist or isn't a directory"
+      end
+      if(@output != "-")
+        FileUtils.mkdir_p @output
+      end
+    end
+
+    def go!
+      #process_frontmatter
+      #simplify_embedded_logic
+      #parse
+      Dir[File.join(@input_folder, "**", "*.cts")].each do |file|
+        TemplateProcessor.new(self, file).process!
+      end
+    end
+  end
+
+  class TemplateProcessor
+    attr_reader :commands
+    attr_reader :root_folder
+    attr_reader :path
+
+    def initialize(catasta, path)
+      @source = File.read(path).gsub(/\r\n|\r/, "\n")
+      @root_folder = catasta.input_folder
+      @path = path
+      @output = catasta.output
+      @processed = false
+      @config = catasta.config
+      @catasta = catasta
+    end
+    def process!
+      raise if @processed
+      @processed = true
+
+      process_frontmatter
+      simplify_embedded_logic
+      parse
+
+      go_ruby if @config["targets"].include? "Ruby"
+    end
+
+    def process_frontmatter
+      # Extract the "raw" front matter from the template, removing it from the source
+      @source.gsub!(/^(---.*)---\n/m) {|m| @raw_front_matter = YAML.load_documents(m); ""}
+      # Create a new hash containing the contents of the raw front matter, keyed off of target
+      @front_matter = @raw_front_matter.compact.inject({}){|memo, doc| memo[doc["target"]] = doc; memo}
+      # Reasonable defaults
+      @front_matter[nil] = {
+        "header" => true
+      }.merge(@front_matter[nil])
+      # Merge the default content (unspecified target) into each target's config
+      @front_matter.each do |target, doc|
+        next if target.nil?
+        doc.replace(@front_matter[nil].merge(doc))
+      end
+      # Ensure there's at least the default content for each target specified in the core config file
+      @config["targets"].each do |target|
+        if @front_matter[target].nil?
+          @front_matter[target] = @front_matter[nil].dup
+        end
+      end
+    end
+
+    def simplify_embedded_logic
+      @commands = []
+      @cleaned = @source.gsub(/{{(.+?)}}/) {|m| @commands.push($1); "{{#{@commands.size-1}}}"}
+    end
+    def parse
+      @parser = Parser.new(self)
+      sv = SourceVisitor.new
+      visitors = [sv, p]
+
+      @source.split("\n").each_with_index do |line, idx|
+        sv.visit_line(line, idx+1)
+      end
+
+      @cleaned.split("\n").each_with_index do |line, idx|
+        @parser.visit_line(line, idx+1)
+      end
+
+      sexp = nil
+      core_optimizers = [AdjacentTextOptimizer.new]
+      core_optimizers.each {|o| o.optimize! @parser.get}
+
+      @write_args = {to_directory: Pathname.new(@output).dirname.to_s}
+    end
+
+    def go_ruby
+      catasta.generators[:ruby] ||= Ruby::Generator.new
+      generated = catasta.generators[:ruby].process(@parser.get_tree)
+      catasta.writers[:ruby] ||= Ruby::Writer.new
+      catasta.writers[:ruby].process(@write_args, generated, @config)
     end
   end
 
@@ -117,8 +236,8 @@ module CurlyCurly
       if @ops[:type].nil? || @ops[:type] == "JavaScript5"
         js_code = nil
         if @front_matter["Javascript5"]
-            js_code = JavaScript5::Generator.new(self, @front_matter["Javascript5"], p).process
-            puts js_code.inspect
+            js_code = ::CurlyCurly::Javascript5::Generator.new(self, @front_matter["Javascript5"], p).process
+            Javascript5::Writer.new(@front_matter["Javascript5"], js_code[:code], js_code[:class_code]).write(write_args)
         end
       end
     end
@@ -162,4 +281,7 @@ unless File.exist? input_file
   exit
 end
 
-CurlyCurly::Curly.new(input_file, output_file, options).go!
+puts "input is #{input_file}, output is #{output_file}"
+
+#CurlyCurly::Curly.new(input_file, output_file, options).go!
+CurlyCurly::Catasta.new(input_file, output_file, options).go!

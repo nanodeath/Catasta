@@ -1,9 +1,8 @@
 module CurlyCurly
   class Generator
-    def initialize(curly, config, gpv)
-      @curly = curly
-      @config = config
-      @gpv = gpv
+    def initialize
     end
+
+    def process(parse_tree); end
   end
 end
