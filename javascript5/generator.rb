@@ -1,20 +1,22 @@
 require_relative 'generator'
 require_relative 'scoping'
-require_relative 'type_renderer'
 require "set"
 
-module CurlyCurly::Javascript5
-class Generator < CurlyCurly::Generator
-  def process
-    parse(@gpv.get)
+module Catasta::Javascript5
+class Generator < Catasta::Generator
+  def visit(step)
+    @config = step.lookup(:FrontMatter)[:front_matter]["Javascript5"]
+    parser = step.lookup(:Parser)
+    result = parse(parser.tree)
+    step.tree = result[:code]
+    step[:class_code] = result[:class_code]
   end
   def parse(node)
     case node
-    when CurlyCurly::Node::Program
+    when Catasta::Node::Program
       # Initialization
       # Should happen only once per top-level call to #parse
       @scopes = []
-      @type_renderer = TypeRenderer.new
       @class_code = []
       if @config.has_key? "parameters"
         scope = ArgumentScope.new
@@ -30,15 +32,15 @@ class Generator < CurlyCurly::Generator
         @filters = {}
       end
       code = node.children.map {|s| parse(s)}
-      {imports: @imports, code: code, class_code: @class_code }
-    when CurlyCurly::Node::Text
+      {code: code, class_code: @class_code }
+    when Catasta::Node::Text
       [:text, sanitize(node.text)]
-    when CurlyCurly::Node::IterateList
+    when Catasta::Node::IterateList
       coll = node.collection
       loop_var = node.loop_var
       scope = lookup_scope(coll)
       coll_type = scope.get_type(coll)
-      raise @gpv.make_compile_error("Can't iterate list-style over #{coll}", node) unless coll_type.is_a? CurlyCurly::List
+      raise @gpv.make_compile_error("Can't iterate list-style over #{coll}", node) unless coll_type.is_a? Catasta::List
       value_type = coll_type.get_subtype(:value)
       coll_resolved = scope.resolve(coll)
 
@@ -56,8 +58,7 @@ class Generator < CurlyCurly::Generator
       ]
       @scopes.pop
       result
-    when CurlyCurly::Node::IterateMap
-      @imports << "java.util.Map"
+    when Catasta::Node::IterateMap
       coll = node.collection
       key_var = node.loop_var_key
       value_var = node.loop_var_value
@@ -73,11 +74,10 @@ class Generator < CurlyCurly::Generator
       scope[value_var] = value_type
       @scopes << scope
       
-      generic_bits = %|<#{@type_renderer.simple_name(key_type)}, #{@type_renderer.simple_name(value_type)}>|
       result = [
-        [:code, %|for(var #{key_var} in #{col1_resolved}){|],
+        [:code, %|for(var #{key_var} in #{coll_resolved}){|],
           [:indent],
-          [:code, %|if(!#{col1_resolved}.hasOwnProperty(#{key_var})){|],
+          [:code, %|if(!#{coll_resolved}.hasOwnProperty(#{key_var})){|],
             [:indent],
             [:code, %|continue;|],
             [:unindent],
@@ -85,7 +85,7 @@ class Generator < CurlyCurly::Generator
       ]
       body = node.children.map {|s| parse(s)}
       if scope.get_resolve_count(value_var) > 0
-        result << [:code, %|var #{value_var} = #{col1_resolved}[#{key_var}];|]
+        result << [:code, %|var #{value_var} = #{coll_resolved}[#{key_var}];|]
       end
       result += [
           body,
@@ -94,45 +94,42 @@ class Generator < CurlyCurly::Generator
       ]
       @scopes.pop
       result
-    when CurlyCurly::Node::Evaluate
+    when Catasta::Node::Evaluate
       var = node.code
       result = evaluate(var)
       
       [:output, result]
-    when CurlyCurly::Node::ConditionalTruthy
+    when Catasta::Node::ConditionalTruthy
       positive = node.positive
       var = node.variable
       scope = lookup_scope(var)
       resolved = scope.resolve(var)
       type = scope.get_type(var)
-      type_string = @type_renderer.simple_name(type)
       top = case type
-      when CurlyCurly::Integer
+      when Catasta::Integer
         if positive
-          "if(!(Integer.valueOf(0).equals(#{resolved}))) {"
+          "if(#{resolved} !== 0) {"
         else
-          "if(Integer.valueOf(0).equals(#{resolved}))) {"
+          "if(#{resolved} === 0) {"
         end
-      when CurlyCurly::String
+      when Catasta::String
         # Java 1.6 introduced String#isEmpty
         if positive
-          %|if(!"".equals(#{resolved})) {|
+          %|if(#{resolved} !== "") {|
         else
-          %|if("".equals(#{resolved})) {|
+          %|if(#{resolved} === "") {|
         end
-      when CurlyCurly::Map
-        @imports << "java.util.Map"
+      when Catasta::Map
         if positive
-          "if(#{resolved} != null && !((#{type_string})#{resolved}).isEmpty()) {"
+          "if(#{resolved} !== null && Object.keys(#{resolved}).length > 0) {"
         else
-          "if(#{resolved} == null || ((#{type_string})#{resolved}).isEmpty()) {"
+          "if(#{resolved} === null || (Object.keys(#{resolved}).length < 1) {"
         end
-      when CurlyCurly::List
-        @imports << "java.util.List"
+      when Catasta::List
         if positive
-          "if(#{resolved} != null && ((#{type_string})#{resolved}).isEmpty()) {"
+          "if(#{resolved} !== null && #{resolved}.length > 0) {"
         else
-          "if(#{resolved} == null || !((#{type_string})#{resolved}).isEmpty()) {"
+          "if(#{resolved} === null || #{resolved}.length < 1) {"
         end
       else
         raise "Unexpected type in conditional: `#{scope.get_type(var)}`"
@@ -158,17 +155,14 @@ class Generator < CurlyCurly::Generator
       scope = lookup_scope(var)
       [scope.resolve(var), scope.get_type(var)]
     when /^\d+$/
-      [var.to_i, CurlyCurly::Integer.new]
+      [var.to_i, Catasta::Integer.new]
     when /^"\w+"$/
-      [var, CurlyCurly::String.new]
+      [var, Catasta::String.new]
     when /^[a-zA-Z]+(?:\.[a-zA-Z]+)+/
       parts = var.split(".")
       scope = lookup_scope(parts[0])
-      raise "Invalid target for property lookup" unless scope.get_type(parts[0]).is_a? CurlyCurly::Object
-      @imports << "com.curlycurly.core.PojoExtractor"
-      @class_code << "private static final PojoExtractor _extractor = new PojoExtractor();"
-      args = [parts[0]] + parts.drop(1).map {|p| %{"#{p}"}}
-      ["_extractor.extract(#{args.join(", ")})", CurlyCurly::Unknown.new]
+      raise "Invalid target for property lookup" unless scope.get_type(parts[0]).is_a? Catasta::Object
+      [var, Catasta::Unknown.new]
     else
       raise "Can't evaluate `#{var}`"
     end

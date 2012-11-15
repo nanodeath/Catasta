@@ -14,7 +14,7 @@ require_relative 'ruby/generator'
 require_relative 'ruby/writer'
 require_relative 'java15/generator'
 require_relative 'java15/writer'
-# require_relative 'javascript5/generator'
+require_relative 'javascript5/generator'
 
 module Catasta
 VERSION = "0.1"
@@ -164,6 +164,12 @@ class App
       process_steps(pre_code_step, [
         [:JavaGenerator, Java15::Generator.new],
         [:JavaWriter, Java15::Writer.new(write_args)]
+      ])
+    end
+    if(targets.nil? or !(["JavaScript", "JavaScript5"] & targets).empty?)
+      process_steps(pre_code_step, [
+        [:JavascriptGenerator, Javascript5::Generator.new],
+        # [:JavaWriter, Java15::Writer.new(write_args)]
       ])
     end
   end
