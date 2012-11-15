@@ -1,4 +1,4 @@
-module CurlyCurly
+module Catasta
   module Java15
     class TypeRenderer
       def simple_name(type)

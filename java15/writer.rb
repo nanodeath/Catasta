@@ -2,37 +2,31 @@ require 'fileutils'
 require 'erb'
 require 'pp'
 
-module CurlyCurly::Java15
+module Catasta::Java15
   class Writer
-    def initialize(config, imports, code_tree, class_code)
-      @config = config
-      @template = ERB.new(File.read("java15/writer_template.erb"), nil, "<>")
+    def initialize(destination)
+      @destination = destination
 
-      @imports = imports
-      @code_tree = code_tree
-      @class_code = class_code
+      template_path = "java15/writer_template.erb"
+      @template = ERB.new(File.read(template_path), nil, "<>")
+      @template.filename = template_path
     end
     
-    def write(destination={})
-      out = @config["out"] || "build/java15"
-      if(destination[:to_directory])
-        out = File.join(out, destination[:to_directory])
-      end
-      file = if(destination[:to_file])
-        destination[:to_file]
-      else
-        the_class = (@config["class"] || "MyTemplate")
-        File.join(out, the_class.split(".")[0..-2], the_class.split(".").last + ".java")
-      end
+    def visit(step)
+      out = File.join(@destination[:to_directory], "java15")
+      @config = step.lookup(:FrontMatter)[:front_matter]["Java15"]
+
+      the_class = (@config["class"] || "MyTemplate")
+      file = File.join(out, the_class.split(".")[0..-2], the_class.split(".").last + ".java")
       FileUtils.mkdir_p(File.dirname(file))
       
+      @imports = imports = step.lookup(:JavaGenerator)[:imports].to_a.sort.map {|i| "import #{i};"}.join("\n")
       methods = [
         StringBuilder.new(self),
         PrintWriter.new(self)
-      ].map {|mg| mg.generate(@code_tree)}
+      ].map {|mg| mg.generate(step.tree)}
       body = methods.join("\n")
-      imports = @imports.to_a.sort.map {|i| "import #{i};"}.join("\n")
-      class_code = @class_code
+      class_code = step.lookup(:JavaGenerator)[:class_code]
       header = true
 
       File.open(file, 'w') {|f| f.write(@template.result(binding))}

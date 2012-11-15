@@ -12,8 +12,8 @@ require_relative 'common/parser'
 require_relative 'optimizers/adjacent_text_optimizer'
 require_relative 'ruby/generator'
 require_relative 'ruby/writer'
-# require_relative 'java15/generator'
-# require_relative 'java15/writer'
+require_relative 'java15/generator'
+require_relative 'java15/writer'
 # require_relative 'javascript5/generator'
 
 module Catasta
@@ -74,6 +74,8 @@ class FrontMatter
       next if target.nil?
       doc.replace(@front_matter[nil].merge(doc))
     end
+    # @front_matter["Java"] = @front_matter["Java15"]
+    # @front_matter["Ruby"] = @front_matter["Ruby19"]
     step[:front_matter] = @front_matter
   end
 end
@@ -153,11 +155,15 @@ class App
 
     targets = @options[:targets]
     if(targets.nil? or !(["Ruby", "Ruby19"] & targets).empty?)
-      # ruby_code = Ruby::Generator.new(self, @front_matter["Ruby"], p).process
-      #   Ruby::Writer.new(@front_matter["Ruby"], ruby_code[:imports], ruby_code[:code], ruby_code[:class_code]).write(write_args)
       process_steps(pre_code_step, [
         [:RubyGenerator, Ruby::Generator.new],
         [:RubyWriter, Ruby::Writer.new(write_args)]
+      ])
+    end
+    if(targets.nil? or !(["Java", "Java15"] & targets).empty?)
+      process_steps(pre_code_step, [
+        [:JavaGenerator, Java15::Generator.new],
+        [:JavaWriter, Java15::Writer.new(write_args)]
       ])
     end
   end
