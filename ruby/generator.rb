@@ -6,14 +6,18 @@ require_relative '../common/util'
 require_relative 'scoping'
 require_relative "../common/nodes"
 
-module CurlyCurly::Ruby
-class Generator < CurlyCurly::Generator
-  def process
-    parse(@gpv.get)
+module Catasta::Ruby
+class Generator < Catasta::Generator
+  def visit(step)
+    @config = step.lookup(:FrontMatter)[:front_matter]["Ruby"]
+    parser = step.lookup(:Parser)
+    result = parse(parser.tree)
+    step.tree = result[:code]
+    step[:imports] = result[:imports]
   end
   def parse(node)
     case node
-    when ::CurlyCurly::Node::Program
+    when ::Catasta::Node::Program
       # Initialization
       # Should happen only once per top-level call to #parse
       @scopes = []
@@ -27,7 +31,7 @@ class Generator < CurlyCurly::Generator
       if @config.has_key? "imports"
         @filters = @config["imports"].inject({}) { |memo, (target_method, alia)|
           klass, method = target_method.split(".", 2)
-          @imports << CurlyCurly::Util.underscore(klass)
+          @imports << Catasta::Util.underscore(klass)
           memo[alia] = target_method
           memo
         }
@@ -37,9 +41,9 @@ class Generator < CurlyCurly::Generator
       code = node.children.map {|s| parse(s)}
       imports = @imports.to_a
       {:code => code, :imports => imports}
-    when CurlyCurly::Node::Text
+    when Catasta::Node::Text
       [:text, node.text]
-    when ::CurlyCurly::Node::IterateList
+    when ::Catasta::Node::IterateList
       coll = node.collection
       loop_var = node.loop_var
 
@@ -59,7 +63,7 @@ class Generator < CurlyCurly::Generator
       ]
       @scopes.pop
       result
-    when CurlyCurly::Node::IterateMap
+    when Catasta::Node::IterateMap
       coll = node.collection
       key_var = node.loop_var_key
       value_var = node.loop_var_value
@@ -81,7 +85,7 @@ class Generator < CurlyCurly::Generator
       ]
       @scopes.pop
       result
-    when CurlyCurly::Node::Evaluate
+    when Catasta::Node::Evaluate
       code = node.code
       var, filters = code.split("|", 2).map {|s| s.strip}
       result, type = case var
@@ -90,16 +94,16 @@ class Generator < CurlyCurly::Generator
         scope = lookup_scope(var)
         [scope.resolve(var), scope.get_type(var)]
       when /^\d+$/
-        [var.to_i, CurlyCurly::Integer.new]
+        [var.to_i, Catasta::Integer.new]
       when /^"\w+"$/
-        [var, CurlyCurly::String.new]
+        [var, Catasta::String.new]
       when /^[a-zA-Z]+(?:\.[a-zA-Z]+)+/
         parts = var.split(".")
         scope = lookup_scope(parts[0])
-        raise "Invalid target for property lookup" unless scope.get_type(parts[0]).is_a? CurlyCurly::Object
+        raise "Invalid target for property lookup" unless scope.get_type(parts[0]).is_a? Catasta::Object
         # Splitting and joining on . is redundant, but this is just leaving an opening
         # to change the syntax later
-        [parts.join("."), CurlyCurly::Unknown.new]
+        [parts.join("."), Catasta::Unknown.new]
       else
         raise "Can't evaluate `#{var}`"
       end
@@ -112,25 +116,25 @@ class Generator < CurlyCurly::Generator
         end
       end
       [:output, result]
-    when CurlyCurly::Node::ConditionalTruthy
+    when Catasta::Node::ConditionalTruthy
       positive = node.positive
       var = node.variable
       scope = lookup_scope(var)
       resolved = scope.resolve(var)
       top = case scope.get_type(var)
-      when CurlyCurly::Integer
+      when Catasta::Integer
         if positive
           "if #{resolved} != 0"
         else
           "if #{resolved} == 0"
         end
-      when CurlyCurly::String
+      when Catasta::String
         if positive
           %{if #{resolved} != ""}
         else
           %{if #{resolved} == ""}
         end
-      when CurlyCurly::Map, CurlyCurly::List # we /could/ use CurlyCurly::Collection here, but unsound
+      when Catasta::Map, Catasta::List # we /could/ use Catasta::Collection here, but unsound
         if positive
           "if !#{resolved}.empty?"
         else

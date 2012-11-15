@@ -1,9 +1,6 @@
-module CurlyCurly
+module Catasta
   class Generator
-    def initialize(curly, config, gpv)
-      @curly = curly
-      @config = config
-      @gpv = gpv
+    def initialize
     end
   end
 end

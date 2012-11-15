@@ -1,4 +1,4 @@
-module CurlyCurly
+module Catasta
   class Type
   end
   class Integer < Type

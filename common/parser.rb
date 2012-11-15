@@ -2,7 +2,7 @@ require_relative "parser"
 require_relative "nodes"
 require 'pry'
 
-module CurlyCurly
+module Catasta
 class CompileError < StandardError
   attr_reader :line_number
   def initialize(msg, line_number)
@@ -33,8 +33,7 @@ class LineNumberListener < NodeListener
 end
 
 class Parser
-  def initialize(curly)
-    @curly = curly
+  def initialize
     @root = Node::Program.new
     @current_node = @root
     @listeners = []
@@ -47,11 +46,19 @@ class Parser
   end
 
   def make_compile_error(msg, node)
-    CompileError.new(msg, node_to_line_number(node))
+    CompileError.new(msg, node_to_line_number(nodes))
   end
 
   def node_to_line_number(node)
     @line_number_listener.get_line_number(node)
+  end
+
+  def visit(step)
+    @embedded_commands = step.lookup(:EmbeddedCommands)
+    @embedded_commands.tree.split("\n").each_with_index do |line, idx|
+      visit_line(line, idx+1)
+    end
+    step.tree = @root
   end
 
   attr_reader :line_number
@@ -65,7 +72,7 @@ class Parser
 
       @current_node.add_instruction Node::Text.new(intermediate_text)
       tag_match_idx = tag_match[1].to_i
-      command = @curly.commands[tag_match_idx].strip
+      command = @embedded_commands[:commands][tag_match_idx].strip
 
       if command.start_with? "="
         expression = command[1..-1].strip
@@ -103,10 +110,6 @@ class Parser
 
   def close_current_node
     @current_node = @current_node.parent
-  end
-
-  def get
-    @root
   end
 end
 end

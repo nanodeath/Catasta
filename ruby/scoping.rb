@@ -2,18 +2,18 @@ require_relative "../common/typing"
 require_relative "../common/type_parser"
 require_relative "type_renderer"
 
-module CurlyCurly::Ruby
+module Catasta::Ruby
   class Scope
     def initialize
       @values = {}
-      @type_parser = CurlyCurly::TypeParser.new
+      @type_parser = Catasta::TypeParser.new
       @type_renderer = TypeRenderer.new
     end
     def []=(value, type)
       @values[value] = case type
       when String
         @type_parser.parse(type)
-      when CurlyCurly::Type
+      when Catasta::Type
         type
       else
         raise "Unexpected assignment: #{value} and #{type.inspect}"

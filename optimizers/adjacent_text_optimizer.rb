@@ -1,6 +1,6 @@
 require_relative './optimizer'
 
-module CurlyCurly
+module Catasta
   class AdjacentTextOptimizer < Optimizer
     def optimize!(tree)
       idx = 0

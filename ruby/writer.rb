@@ -1,46 +1,34 @@
 require 'fileutils'
 require 'erb'
 
-module CurlyCurly::Ruby
+module Catasta::Ruby
   class Writer
-    def initialize(config, imports, code_tree, class_code)
-      @config = config
+    def initialize(destination)
+      @destination = destination
+
       template_path = "ruby/writer_template.erb"
       @template = ERB.new(File.read(template_path), nil, "<>")
       @template.filename = template_path
-
-      @imports = imports
-      @code_tree = code_tree
-      @class_code = class_code
     end
     
-    def write(destination={})
-      out = @config["out"] || "build/ruby"
-      if(destination[:to_directory])
-        out = File.join(out, destination[:to_directory])
-      end
+    def visit(step)
+      out = File.join(@destination[:to_directory], "ruby")
+      @config = step.lookup(:FrontMatter)[:front_matter]["Ruby"]
+
       the_module = (@config["module"] || "").split("::")
       the_class = (@config["class"] || "Template")
       header = @config["header"]
-      file = if(destination[:to_file])
-        destination[:to_file]
-      else
-        File.join(out, the_module, the_class + ".rb")
-      end
+      file = File.join(out, the_module, the_class + ".rb")
       FileUtils.mkdir_p(File.dirname(file))
 
       methods = [
         ArrayBuffer.new(self)
-      ].map {|mg| mg.generate(@code_tree)}
+      ].map {|mg| mg.generate(step.tree)}
       body = methods.join("\n")
-      imports = @imports.to_a.sort.map {|i| %{import "#{i}"}}.join("\n")
-      class_code = @class_code
+      imports = step.lookup(:RubyGenerator)[:imports].to_a.sort.map {|i| %{import "#{i}"}}.join("\n")
+      class_code = nil
 
-      if(file == "-")
-        puts @template.result(binding)
-      else
-        File.open(file, 'w') {|f| f.write(@template.result(binding))}
-      end
+      File.open(file, 'w') {|f| f.write(@template.result(binding))}
     end
   end
 

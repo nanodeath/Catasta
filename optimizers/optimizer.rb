@@ -1,4 +1,4 @@
-module CurlyCurly
+module Catasta
     class Optimizer
         def initialize
 

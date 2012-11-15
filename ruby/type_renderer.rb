@@ -1,4 +1,4 @@
-module CurlyCurly
+module Catasta
   module Ruby
     class TypeRenderer
       def postfix(type)

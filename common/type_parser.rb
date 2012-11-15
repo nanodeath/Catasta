@@ -1,5 +1,5 @@
 # Parses the types listed in the front matter of templates
-module CurlyCurly
+module Catasta
   class TypeParser
     def parse(type)
       case type

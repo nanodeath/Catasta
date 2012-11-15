@@ -1,4 +1,4 @@
-module CurlyCurly
+module Catasta
 module Node
   class Node
     def initialize(opts={})
