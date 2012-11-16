@@ -1,14 +1,13 @@
-require 'yaml'
-require 'benchmark'
+#!/usr/bin/env ruby
+
 require 'optparse'
-require 'pathname'
 
 require 'term/ansicolor'
 class String
   include Term::ANSIColor
 end
 
-require_relative "core/app"
+require "catasta/core/app"
 
 options = {
   header: true
@@ -16,7 +15,7 @@ options = {
 input_file = nil
 output_directory = nil
 op = OptionParser.new do |opts|
-  opts.banner = "Usage: ruby #$0 [options] file"
+  opts.banner = "Usage: ruby #{File.basename $0} [options] input_file output_directory/"
   opts.on("-v", "--[no-]verbose", "Run verbosely") do |v|
     options[:verbose] = v
   end
@@ -36,6 +35,11 @@ op.parse!
 
 input_file = ARGV.shift
 output_directory = ARGV.shift
+
+if !input_file || !output_directory
+  puts op.help
+  exit 1
+end
 
 unless File.exist? input_file
   $stderr.puts "File not found: `#{input_file}`"

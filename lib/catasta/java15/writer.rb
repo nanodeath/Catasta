@@ -7,7 +7,7 @@ module Catasta::Java15
     def initialize(destination)
       @destination = destination
 
-      template_path = "java15/writer_template.erb"
+      template_path = File.join(File.dirname(__FILE__), "writer_template.erb")
       @template = ERB.new(File.read(template_path), nil, "<>")
       @template.filename = template_path
     end
@@ -47,7 +47,7 @@ module Catasta::Java15
   class StringBuilder < MethodGenerator
     def initialize(*args)
       super
-      @template = ERB.new(File.read("java15/method_template_string_builder.erb"), nil, "<>")
+      @template = ERB.new(File.read(File.join(File.dirname(__FILE__), "method_template_string_builder.erb")), nil, "<>")
     end
     def generate(tree)
       code = generate_helper(tree)
@@ -80,7 +80,7 @@ module Catasta::Java15
   class PrintWriter < MethodGenerator
     def initialize(*args)
       super
-      @template = ERB.new(File.read("java15/method_template_print_writer.erb"), nil, "<>")
+      @template = ERB.new(File.read(File.join(File.dirname(__FILE__), "method_template_print_writer.erb")), nil, "<>")
     end
     def generate(tree)
       @writer.add_import("java.io.PrintWriter")

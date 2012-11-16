@@ -1,6 +1,5 @@
 require_relative "parser"
 require_relative "nodes"
-require 'pry'
 
 module Catasta
 class CompileError < StandardError

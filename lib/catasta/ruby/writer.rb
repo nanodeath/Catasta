@@ -6,7 +6,7 @@ module Catasta::Ruby
     def initialize(destination)
       @destination = destination
 
-      template_path = "ruby/writer_template.erb"
+      template_path = File.join(File.dirname(__FILE__), "writer_template.erb")
       @template = ERB.new(File.read(template_path), nil, "<>")
       @template.filename = template_path
     end
@@ -43,7 +43,7 @@ module Catasta::Ruby
   class ArrayBuffer < MethodGenerator
     def initialize(*args)
       super
-      @template = ERB.new(File.read("ruby/method_template_array_buffer.erb"), nil, "<>")
+      @template = ERB.new(File.read(File.join(File.dirname(__FILE__), "method_template_array_buffer.erb")), nil, "<>")
     end
     def generate(tree)
       code  = "  " * 3 + "_buf = []\n"

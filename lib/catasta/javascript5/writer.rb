@@ -7,7 +7,7 @@ module Catasta::Javascript5
     def initialize(destination)
       @destination = destination
 
-      template_path = "javascript5/writer_template.erb"
+      template_path = File.join(File.dirname(__FILE__), "writer_template.erb")
       @template = ERB.new(File.read(template_path), nil, "<>")
       @template.filename = template_path
     end
@@ -48,7 +48,7 @@ module Catasta::Javascript5
   class StringConcatenator < MethodGenerator
     def initialize(*args)
       super
-      @template = ERB.new(File.read("javascript5/method_template_string_concatenator.erb"), nil, "<>")
+      @template = ERB.new(File.read(File.join(File.dirname(__FILE__), "method_template_string_concatenator.erb")), nil, "<>")
     end
     def generate(tree)
       code = generate_helper(tree)
