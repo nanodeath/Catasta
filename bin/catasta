@@ -19,8 +19,8 @@ op = OptionParser.new do |opts|
   opts.on("-v", "--[no-]verbose", "Run verbosely") do |v|
     options[:verbose] = v
   end
-  opts.on("-t", "--type=TYPE", "Type to output, e.g. Java15, Ruby.") do |t|
-    options[:type] = t
+  opts.on("-t", "--targets x,y,z", Array, "Type(s) to output, e.g. Java15, Ruby.") do |t|
+    options[:targets] = t
   end
   opts.on("--[no-]header", "Enable or disable the header at the top of generated files.") do |h|
     options[:header] = h
@@ -46,4 +46,4 @@ unless File.exist? input_file
   exit
 end
 
-Catasta::App.new(options).go(input_file, output_directory)
+Catasta::App.new(options).go(File.read(input_file), output_directory)

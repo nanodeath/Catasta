@@ -13,11 +13,11 @@ module Catasta
       @options = options
     end
 
-    def go(input_file, output_directory)
+    def go(template_string, output_directory)
       write_args = {to_directory: Pathname.new(output_directory).to_s}
 
       first_step = Step.new(:First)
-      first_step.tree = File.read(input_file)
+      first_step.tree = template_string
 
       pipeline = [
         [:FrontMatter, FrontMatterExtractor.new(@options)],
@@ -30,10 +30,12 @@ module Catasta
 
       targets = @options[:targets]
       if(targets.nil? or !(["Ruby", "Ruby19"] & targets).empty?)
-        process_steps(pre_code_step, [
+        code_steps = [
           [:RubyGenerator, Ruby::Generator.new],
-          [:RubyWriter, Ruby::Writer.new(write_args)]
-        ])
+          [:RubyWriter, Ruby::Writer.new(write_args, @options[:tilt])]
+        ]
+        result = process_steps(pre_code_step, code_steps)
+        return result.tree if @options[:tilt]
       end
       if(targets.nil? or !(["Java", "Java15"] & targets).empty?)
         process_steps(pre_code_step, [

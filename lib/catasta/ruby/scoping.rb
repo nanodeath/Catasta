@@ -33,7 +33,7 @@ module Catasta::Ruby
 
   class ArgumentScope < Scope
     def resolve(v)
-      %{_params["#{v}"]} + @type_renderer.postfix(@values[v])
+      %{_params[:#{v}]} + @type_renderer.postfix(@values[v])
     end
   end
 
