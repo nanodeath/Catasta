@@ -10,11 +10,12 @@ class CatastaParser < Parslet::Parser
   rule(:space?) { space.maybe }
   rule(:newline) { match('\n').repeat(1) }
   rule(:newline?) { newline.maybe }
+  rule(:inverse) { match('!') }
 
   rule(:ruby) { (str(END_TOKEN).absent? >> any).repeat.as(:ruby) }
   rule(:expression) { (str('=') >> ruby).as(:expression) }
   rule(:comment) { (str('#') >> ruby) }
-  rule(:loopy) { 
+  rule(:loop_list) { 
     (
       str(START_TOKEN) >>
       str('for') >> 
@@ -33,11 +34,34 @@ class CatastaParser < Parslet::Parser
     str(END_TOKEN) >>
     newline?
   }
+  rule(:loop_map) {
+    (
+      str(START_TOKEN) >>
+      str('for') >> 
+      space >> 
+      match("[a-zA-Z]").repeat(1).as(:loop_key) >>
+      match(",") >>
+      space? >>
+      match("[a-zA-Z]").repeat(1).as(:loop_value) >>
+      space >>
+      str('in') >> 
+      space >> 
+      match("[a-zA-Z]").repeat(1).as(:collection) >>
+      str(END_TOKEN) >>
+      newline?
+    ).as(:loop_map) >> 
+    text_with_ruby >> 
+    str(START_TOKEN) >>
+    str('/for') >>
+    str(END_TOKEN) >>
+    newline?
+  }
   rule(:iff) {
     (
       str(START_TOKEN) >>
       str('if') >>
       space >>
+      inverse.maybe.as(:inverted) >>
       match("[a-zA-Z]").repeat(1).as(:variable) >>
       str(END_TOKEN) >>
       newline?
@@ -50,7 +74,7 @@ class CatastaParser < Parslet::Parser
   }
   rule(:catasta) { expression | comment}
 
-  rule(:catasta_with_matching_tags) { loopy | iff }
+  rule(:catasta_with_matching_tags) { loop_list | loop_map | iff }
 
   rule(:catasta_with_tags) { str(START_TOKEN) >> catasta >> str(END_TOKEN) >> newline? }
   
@@ -165,21 +189,47 @@ class Loop < Struct.new(:loop_var, :collection, :nodes)
     ctx.pad %Q{#{collection.render(ctx)}.each do |#{loop_var}|\n} + inner + "\nend\n"
   end
 end
+class LoopMap < Struct.new(:loop_key, :loop_value, :collection, :nodes)
+  def render(ctx)
+    s = LocalScope.new
+    s[loop_key.str] = "cat"
+    s[loop_value.str] = "f"
+    inner = ctx.add_scope(s) do
+      ctx.indent { nodes.map {|n| n.render(ctx)}.join("\n") }
+    end
+    ctx.pad %Q{#{collection.render(ctx)}.each_pair do |#{loop_key}, #{loop_value}|\n} + inner + "\nend\n"
+  end
+end
 class Content < Struct.new(:nodes)
   def render(ctx)
     nodes.map {|n| n.render(ctx)}.join("\n") + "\n"
   end
 end
-class Conditional < Struct.new(:variable, :nodes)
+class Conditional < Struct.new(:inverted, :variable, :nodes)
   def render(ctx)
     rendered_variable = variable.render(ctx)
-    condition = [
+    condition = inverted ? get_inverted_condition(rendered_variable) : get_condition(rendered_variable)
+    condition = condition.map {|i| "(#{i})"}.join(" || ")
+    inner = ctx.indent { nodes.map {|n| n.render(ctx)} }
+    ["if(#{condition})", inner, "end"].flatten.join("\n")
+  end
+
+  private
+  def get_condition(rendered_variable)
+    [
       rendered_variable + ".is_a?(TrueClass)", # Booleans
       rendered_variable + ".is_a?(String) && " + rendered_variable + %q{ != ""}, # Strings
       rendered_variable + ".respond_to?(:empty?) && !#{rendered_variable}.empty?", # Hashes and Arrays
-    ].map {|i| "(#{i})"}.join(" || ")
-    inner = ctx.indent { nodes.map {|n| n.render(ctx)} }
-    ["if(#{condition})", inner, "end"].flatten.join("\n")
+    ]
+  end
+
+  def get_inverted_condition(rendered_variable)
+    [
+      rendered_variable + ".nil?", # Nil
+      rendered_variable + ".is_a?(FalseClass)", # Booleans
+      rendered_variable + %q{ == ""}, # Strings
+      rendered_variable + ".respond_to?(:empty?) && #{rendered_variable}.empty?", # Hashes and Arrays
+    ]
   end
 end
 class Root < Struct.new(:nodes)
@@ -196,8 +246,11 @@ end
 class CatastaRubyTransform < Parslet::Transform
   rule(:expression => { :ruby => simple(:ruby) }) { Code.new(VariableLookup.new(ruby)) }
   rule(:comment => { :ruby => simple(:ruby) }) { '' }
-  rule(:loop => { :i => simple(:i), :collection => simple(:collection)}, :content => sequence(:nodes)) { Loop.new(i, VariableLookup.new(collection), nodes) }
-  rule(:condition => {:variable => simple(:variable)}, :content => sequence(:nodes)) { Conditional.new(VariableLookup.new(variable), nodes) }
+  rule(:loop => { :i => simple(:i), :collection => simple(:collection) }, :content => sequence(:nodes)) { Loop.new(i, VariableLookup.new(collection), nodes) }
+  rule(:loop_map => { :loop_key => simple(:loop_key), :loop_value => simple(:loop_value), :collection => simple(:collection) }, :content => sequence(:nodes)) {
+    LoopMap.new(loop_key, loop_value, VariableLookup.new(collection), nodes)
+  }
+  rule(:condition => { :variable => simple(:variable), :inverted => simple(:inverted) }, :content => sequence(:nodes)) { Conditional.new(inverted, VariableLookup.new(variable), nodes) }
   
   rule(:text => simple(:text)) { Text.new(text) }
   rule(:text => sequence(:texts)) { TextList.new(texts) }

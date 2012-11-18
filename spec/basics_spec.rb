@@ -25,6 +25,17 @@
 require 'rspec'
 require "catasta/core/parslet_parser"
 
+RSpec.configure do |config|
+  # Use color in STDOUT
+  config.color_enabled = true
+
+  # Use color not only in STDOUT but also in pagers and files
+  config.tty = true
+
+  # Use the specified formatter
+  config.formatter = :documentation # :progress, :html, :textmate
+end
+
 RSpec::Matchers.define :compile_to do |expected|
   match do |actual|
     # puts "parse: #{CatastaParser.new.parse(actual)}"
@@ -66,7 +77,7 @@ puts "!\\n"
 OUTPUT
     end
 
-    it "should process loops" do
+    it "should process loops over arrays" do
       <<INPUT.should compile_to(<<OUTPUT)
 <ol>
 {{for c in content}}
@@ -85,7 +96,7 @@ puts "</ol>\\n"
 OUTPUT
     end
 
-    it "should process conditionals" do
+    it "should process basic conditionals" do
       <<INPUT.should compile_to(<<OUTPUT)
 {{if monkey}}
   Monkey is truthy.
@@ -95,6 +106,40 @@ if((_params[:monkey].is_a?(TrueClass)) || (_params[:monkey].is_a?(String) && _pa
   puts "  Monkey is truthy.\\n"
 end
 OUTPUT
+    end
+
+    it "should process basic inverse conditionals" do
+      <<INPUT.should compile_to(<<OUTPUT)
+{{if !monkey}}
+  Monkey is falsey.
+{{/if}}
+INPUT
+if((_params[:monkey].nil?) || (_params[:monkey].is_a?(FalseClass)) || (_params[:monkey] == "") || (_params[:monkey].respond_to?(:empty?) && _params[:monkey].empty?))
+  puts "  Monkey is falsey.\\n"
+end
+OUTPUT
+    end
+
+    it "should process loops over maps" do
+      <<INPUT.should compile_to(<<OUTPUT)
+<ol>
+{{for k,v in content}}
+  <li>{{=k}}: {{=v}}</li>
+{{/for}}
+</ol>
+INPUT
+puts "<ol>\\n"
+_params[:content].each_pair do |k, v|
+  puts "  <li>"
+  puts k
+  puts ": "
+  puts v
+  puts "</li>\\n"
+end
+
+puts "</ol>\\n"
+OUTPUT
+
     end
   end
 end
