@@ -21,6 +21,7 @@ Gem::Specification.new do |s|
   s.add_dependency "json", "~> 1.7.5"
   s.add_dependency "nokogiri", "~> 1.5.5"
   s.add_dependency "term-ansicolor", "~> 1.0.7"
+  s.add_dependency "parslet"
  
   s.files        = Dir.glob("{bin,lib}/**/*")# + %w(LICENSE README.md ROADMAP.md CHANGELOG.md)
   s.executables  = ['catasta']
