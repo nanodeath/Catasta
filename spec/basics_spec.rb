@@ -139,7 +139,6 @@ end
 
 puts "</ol>\\n"
 OUTPUT
-
     end
   end
 end

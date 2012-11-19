@@ -6,6 +6,18 @@ class CatastaParser < Parslet::Parser
   START_TOKEN = "{{"
   END_TOKEN = "}}"
 
+  def simple_tag(text)
+    tag(str(text))
+  end
+
+  def tag(nodes)
+    str(START_TOKEN) >> nodes >> str(END_TOKEN) >> newline?
+  end
+
+  def ident
+    match("[a-zA-Z_]+").repeat(1)
+  end
+
   rule(:space)  { match('\s').repeat(1) }
   rule(:space?) { space.maybe }
   rule(:newline) { match('\n').repeat(1) }
@@ -16,67 +28,37 @@ class CatastaParser < Parslet::Parser
   rule(:expression) { (str('=') >> ruby).as(:expression) }
   rule(:comment) { (str('#') >> ruby) }
   rule(:loop_list) { 
-    (
-      str(START_TOKEN) >>
-      str('for') >> 
-      space >> 
-      match("[a-zA-Z]").repeat(1).as(:i) >> 
-      space >> 
-      str('in') >> 
-      space >> 
-      match("[a-zA-Z]").repeat(1).as(:collection) >>
-      str(END_TOKEN) >>
-      newline?
+    tag(
+      str('for') >> space >> ident.as(:i) >> space >> str('in') >> space >> ident.as(:collection)
     ).as(:loop) >> 
     text_with_ruby >> 
-    str(START_TOKEN) >>
-    str('/for') >>
-    str(END_TOKEN) >>
+    simple_tag('/for') >>
     newline?
   }
   rule(:loop_map) {
-    (
-      str(START_TOKEN) >>
-      str('for') >> 
-      space >> 
-      match("[a-zA-Z]").repeat(1).as(:loop_key) >>
-      match(",") >>
-      space? >>
-      match("[a-zA-Z]").repeat(1).as(:loop_value) >>
-      space >>
-      str('in') >> 
-      space >> 
-      match("[a-zA-Z]").repeat(1).as(:collection) >>
-      str(END_TOKEN) >>
-      newline?
+    tag(
+      str('for') >> space >> ident.as(:loop_key) >> match(",") >> space? >> ident.as(:loop_value) >> space >> str('in') >> space >> ident.as(:collection)
     ).as(:loop_map) >> 
     text_with_ruby >> 
-    str(START_TOKEN) >>
-    str('/for') >>
-    str(END_TOKEN) >>
+    simple_tag('/for') >>
     newline?
   }
   rule(:iff) {
-    (
-      str(START_TOKEN) >>
+    tag(
       str('if') >>
       space >>
       inverse.maybe.as(:inverted) >>
-      match("[a-zA-Z]").repeat(1).as(:variable) >>
-      str(END_TOKEN) >>
-      newline?
+      ident.as(:variable)
     ).as(:condition) >>
     text_with_ruby >>
-    str(START_TOKEN) >>
-    str('/if') >>
-    str(END_TOKEN) >>
+    simple_tag('/if') >> 
     newline?
   }
-  rule(:catasta) { expression | comment}
+  rule(:unary_catasta) { expression | comment}
 
   rule(:catasta_with_matching_tags) { loop_list | loop_map | iff }
 
-  rule(:catasta_with_tags) { str(START_TOKEN) >> catasta >> str(END_TOKEN) >> newline? }
+  rule(:catasta_with_tags) { str(START_TOKEN) >> unary_catasta >> str(END_TOKEN) >> newline? }
   
   rule(:text) { (str(START_TOKEN).absent? >> any).repeat(1).as(:text) }
   
