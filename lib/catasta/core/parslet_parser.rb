@@ -24,8 +24,9 @@ class CatastaParser < Parslet::Parser
   rule(:newline?) { newline.maybe }
   rule(:inverse) { match('!') }
 
+  rule(:string) { str('"') >> (str('"').absent? >> any).repeat.as(:raw_string) >> str('"')}
   rule(:ruby) { (str(END_TOKEN).absent? >> any).repeat.as(:ruby) }
-  rule(:expression) { (str('=') >> ruby).as(:expression) }
+  rule(:expression) { (str('=') >> space? >> (string | ruby)).as(:expression) }
   rule(:comment) { (str('#') >> ruby) }
   rule(:loop_list) { 
     tag(
@@ -68,7 +69,7 @@ class CatastaParser < Parslet::Parser
 end
 
 # p CatastaParser.new.parse("Hello world!")
-for_loop = CatastaParser.new.parse("Hello {{for c in foo}}monkey!{{=c}}{{/for}}")
+# for_loop = CatastaParser.new.parse("Hello {{for c in foo}}monkey!{{=c}}{{/for}}")
 # pp for_loop
 # puts("Parse: " + (Benchmark.measure { CatastaParser.new.parse("Hello {{for c in foo}}monkey!{{=c}}{{/for}}") }))
 # p CatastaParser.new.parse("Hello {{= name}}! {{#a friendly greeting}}")
@@ -93,7 +94,7 @@ class DefaultScope < Scope
     true
   end
   def resolve(v)
-    %{_params[:#{v.strip}]}
+    %{_params[:#{v}]}
   end
 end
 
@@ -142,6 +143,11 @@ class VariableLookup < Struct.new(:var)
     scope = ctx.scopes.find {|s| s.in_scope? var_name}
     raise "Couldn't resolve #{var_name}" unless scope
     scope.resolve(var_name)
+  end
+end
+class RawString < Struct.new(:string)
+  def render(ctx)
+    %Q{"#{string}"}
   end
 end
 class Code < Struct.new(:code)
@@ -214,14 +220,12 @@ class Conditional < Struct.new(:inverted, :variable, :nodes)
     ]
   end
 end
-class Root < Struct.new(:nodes)
+class Root < Struct.new(:subtree)
   def generate(options={})
     ctx = Context.new
     scope = DefaultScope.new
-    ctx.add_scope scope
-    nodes.render(ctx)
-    # puts nodes.inspect
-    # nodes.map {|n| puts "calling render on #{n.inspect}"; n.render(ctx)}.join("\n") + "\n"
+    ctx.add_scope(scope)
+    subtree.render(ctx)
   end
 end
 
@@ -232,6 +236,14 @@ class CatastaRubyTransform < Parslet::Transform
     }
   ) {
     Code.new(VariableLookup.new(ruby))
+  }
+
+  rule(
+    expression: {
+      raw_string: simple(:string)
+    }
+  ) {
+    Code.new(RawString.new(string))
   }
   
   rule(

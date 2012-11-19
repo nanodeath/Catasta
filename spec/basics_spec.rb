@@ -48,6 +48,9 @@ RSpec::Matchers.define :compile_to do |expected|
       raise
     end
     @result = result
+    if result != expected
+      pp parsed
+    end
     result == expected
   end
 
@@ -67,12 +70,22 @@ puts "Hello world!\\n"
 OUTPUT
     end
 
-    it "should process evaluation" do
+    it "should process evaluation of variables" do
       <<INPUT.should compile_to(<<OUTPUT)
 Hello {{= name}}!
 INPUT
 puts "Hello "
 puts _params[:name]
+puts "!\\n"
+OUTPUT
+    end
+
+    it "should process evaluation of strings" do
+      <<INPUT.should compile_to(<<OUTPUT)
+Hello {{= "Bob"}}!
+INPUT
+puts "Hello "
+puts "Bob"
 puts "!\\n"
 OUTPUT
     end
