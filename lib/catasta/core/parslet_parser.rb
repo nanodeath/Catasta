@@ -58,7 +58,7 @@ class CatastaParser < Parslet::Parser
 
   rule(:catasta_with_matching_tags) { loop_list | loop_map | iff }
 
-  rule(:catasta_with_tags) { str(START_TOKEN) >> unary_catasta >> str(END_TOKEN) >> newline? }
+  rule(:catasta_with_tags) { tag(unary_catasta) }
   
   rule(:text) { (str(START_TOKEN).absent? >> any).repeat(1).as(:text) }
   
