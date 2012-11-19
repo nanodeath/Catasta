@@ -90,6 +90,16 @@ puts "!\\n"
 OUTPUT
     end
 
+    it "should process evaluation of integers" do
+      <<INPUT.should compile_to(<<OUTPUT)
+Hello, it is {{= 1}} o'clock!  '
+INPUT
+puts "Hello, it is "
+puts 1
+puts " o'clock!  '\\n"
+OUTPUT
+    end
+
     it "should process loops over arrays" do
       <<INPUT.should compile_to(<<OUTPUT)
 <ol>

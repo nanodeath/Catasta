@@ -24,9 +24,10 @@ class CatastaParser < Parslet::Parser
   rule(:newline?) { newline.maybe }
   rule(:inverse) { match('!') }
 
-  rule(:string) { str('"') >> (str('"').absent? >> any).repeat.as(:raw_string) >> str('"')}
+  rule(:string) { str('"') >> (str('"').absent? >> any).repeat.as(:raw_string) >> str('"') }
+  rule(:integer) { match('[0-9]').repeat(1).as(:int_literal) }
   rule(:ruby) { (str(END_TOKEN).absent? >> any).repeat.as(:ruby) }
-  rule(:expression) { (str('=') >> space? >> (string | ruby)).as(:expression) }
+  rule(:expression) { (str('=') >> space? >> (string | integer | ruby)).as(:expression) }
   rule(:comment) { (str('#') >> ruby) }
   rule(:loop_list) { 
     tag(
@@ -150,6 +151,11 @@ class RawString < Struct.new(:string)
     %Q{"#{string}"}
   end
 end
+class IntLiteral < Struct.new(:literal)
+  def render(ctx)
+    literal
+  end
+end
 class Code < Struct.new(:code)
   def render(ctx)
     result = code.respond_to?(:render) ? code.render(ctx) : code.str
@@ -244,6 +250,14 @@ class CatastaRubyTransform < Parslet::Transform
     }
   ) {
     Code.new(RawString.new(string))
+  }
+
+  rule(
+    expression: {
+      int_literal: simple(:literal)
+    }
+  ) {
+    Code.new(IntLiteral.new(literal))
   }
   
   rule(
