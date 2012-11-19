@@ -91,7 +91,6 @@ _params[:content].each do |c|
   puts c
   puts "</li>\\n"
 end
-
 puts "</ol>\\n"
 OUTPUT
     end
@@ -136,7 +135,6 @@ _params[:content].each_pair do |k, v|
   puts v
   puts "</li>\\n"
 end
-
 puts "</ol>\\n"
 OUTPUT
     end

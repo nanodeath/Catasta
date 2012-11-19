@@ -168,7 +168,7 @@ class Loop < Struct.new(:loop_var, :collection, :nodes)
     inner = ctx.add_scope(s) do
       ctx.indent { nodes.map {|n| n.render(ctx)}.join("\n") }
     end
-    ctx.pad %Q{#{collection.render(ctx)}.each do |#{loop_var}|\n} + inner + "\nend\n"
+    ctx.pad %Q{#{collection.render(ctx)}.each do |#{loop_var}|\n} + inner + "\nend"
   end
 end
 class LoopMap < Struct.new(:loop_key, :loop_value, :collection, :nodes)
@@ -179,7 +179,7 @@ class LoopMap < Struct.new(:loop_key, :loop_value, :collection, :nodes)
     inner = ctx.add_scope(s) do
       ctx.indent { nodes.map {|n| n.render(ctx)}.join("\n") }
     end
-    ctx.pad %Q{#{collection.render(ctx)}.each_pair do |#{loop_key}, #{loop_value}|\n} + inner + "\nend\n"
+    ctx.pad %Q{#{collection.render(ctx)}.each_pair do |#{loop_key}, #{loop_value}|\n} + inner + "\nend"
   end
 end
 class Content < Struct.new(:nodes)
