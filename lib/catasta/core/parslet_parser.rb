@@ -80,7 +80,7 @@ class Scope
     @values = {}
     @resolve_counter = Hash.new(0)
   end
-  def []=(value, type)
+  def <<(value)
     @values[value] = true
   end
   def in_scope?(v)
@@ -194,7 +194,7 @@ end
 class Loop < Struct.new(:loop_var, :collection, :nodes)
   def render(ctx)
     loop_scope = LocalScope.new
-    loop_scope[loop_var.str] = "cat"
+    loop_scope << loop_var.str
 
     def generate_index_variable(input)
       "_#{input[1..-1]}_index"
@@ -202,7 +202,7 @@ class Loop < Struct.new(:loop_var, :collection, :nodes)
     
     user_index_variable = "@#{loop_var.str}"
     special_loop_scope = CustomScope.new(&method(:generate_index_variable))
-    special_loop_scope[user_index_variable] = "dog"
+    special_loop_scope << user_index_variable
     
     inner = ctx.add_scope(special_loop_scope) do
       ctx.add_scope(loop_scope) do
@@ -220,8 +220,8 @@ end
 class LoopMap < Struct.new(:loop_key, :loop_value, :collection, :nodes)
   def render(ctx)
     s = LocalScope.new
-    s[loop_key.str] = "cat"
-    s[loop_value.str] = "f"
+    s << loop_key.str
+    s << loop_value.str
     inner = ctx.add_scope(s) do
       ctx.indent { nodes.map {|n| n.render(ctx)}.join("\n") }
     end
