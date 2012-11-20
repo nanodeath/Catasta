@@ -7,10 +7,10 @@ module Catasta
       @options = options
     end
 
-    def go(template_string, output_directory)
+    def go(template_string, options={})
       parsed = Parser.new.parse(template_string)
       transformed = Ruby::Transform.new.apply(parsed).generate
-      puts transformed
+      return transformed
     end
   end
 end

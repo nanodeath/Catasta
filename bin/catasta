@@ -55,4 +55,4 @@ unless File.exist? input_file
   exit
 end
 
-Catasta::App.new(options).go(File.read(input_file), output_directory)
+Catasta::App.new(options).go(File.read(input_file), output_directory: output_directory)
