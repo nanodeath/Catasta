@@ -15,7 +15,7 @@ class CatastaParser < Parslet::Parser
   end
 
   def ident
-    match("[a-zA-Z_]+").repeat(1)
+    match("[a-zA-Z]").repeat(1) >> match("[a-zA-Z0-9_]").repeat
   end
 
   rule(:space)  { match('\s').repeat(1) }
