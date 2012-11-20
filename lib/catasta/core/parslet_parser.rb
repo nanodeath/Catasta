@@ -78,6 +78,7 @@ end
 class Scope
   def initialize
     @values = {}
+    @resolve_counter = Hash.new(0)
   end
   def []=(value, type)
     @values[value] = true
@@ -88,6 +89,9 @@ class Scope
   def resolve(v)
     raise
   end
+  def get_resolve_count(v)
+    @resolve_counter[v]
+  end
 end
 
 class DefaultScope < Scope
@@ -95,13 +99,27 @@ class DefaultScope < Scope
     true
   end
   def resolve(v)
+    @resolve_counter[v] += 1
     %{_params[:#{v}]}
   end
 end
 
 class LocalScope < Scope
   def resolve(v)
+    @resolve_counter[v] += 1
     v.to_s
+  end
+end
+
+class CustomScope < Scope
+  def initialize(&block)
+    super()
+    @block = block
+  end
+
+  def resolve(v)
+    @resolve_counter[v] += 1
+    @block.call(v)
   end
 end
 
@@ -175,12 +193,28 @@ class TextList < Struct.new(:texts)
 end
 class Loop < Struct.new(:loop_var, :collection, :nodes)
   def render(ctx)
-    s = LocalScope.new
-    s[loop_var.str] = "cat"
-    inner = ctx.add_scope(s) do
-      ctx.indent { nodes.map {|n| n.render(ctx)}.join("\n") }
+    loop_scope = LocalScope.new
+    loop_scope[loop_var.str] = "cat"
+
+    def generate_index_variable(input)
+      "_#{input[1..-1]}_index"
     end
-    ctx.pad %Q{#{collection.render(ctx)}.each do |#{loop_var}|\n} + inner + "\nend"
+    
+    user_index_variable = "@#{loop_var.str}"
+    special_loop_scope = CustomScope.new(&method(:generate_index_variable))
+    special_loop_scope[user_index_variable] = "dog"
+    
+    inner = ctx.add_scope(special_loop_scope) do
+      ctx.add_scope(loop_scope) do
+        ctx.indent { nodes.map {|n| n.render(ctx)}.join("\n") }
+      end
+    end
+    
+    if special_loop_scope.get_resolve_count(user_index_variable) > 0
+      ctx.pad %Q{#{collection.render(ctx)}.each_with_index do |#{loop_var}, #{generate_index_variable(user_index_variable)}|\n} + inner + "\nend"
+    else
+      ctx.pad %Q{#{collection.render(ctx)}.each do |#{loop_var}|\n} + inner + "\nend"
+    end
   end
 end
 class LoopMap < Struct.new(:loop_key, :loop_value, :collection, :nodes)
