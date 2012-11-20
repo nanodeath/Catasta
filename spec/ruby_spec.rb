@@ -1,29 +1,5 @@
-# describe "CurlyCurly" do
-#   def compile_ruby_template(name)
-#     `ruby curly.rb -t Ruby -i spec/templates/#{name}.curly --no-header -`
-#   end
-
-#   sets = [
-#     ["the static template", "static"],
-#     ["templates with a variable", "variable"],
-#     ["conditional templates", "conditional"]
-#   ]
-#   ext = {
-#     "ruby" => "rb"
-#   }
-
-#   ["ruby"].each do |lang|
-#     sets.each do |msg, name|
-#       it "should evaluate #{msg} in #{lang}" do
-#         compiled = method(:"compile_#{lang}_template").call(name)
-#         compiled.should eq(File.read("spec/compiled/#{name}.#{ext[lang]}"))
-#       end
-#     end
-#   end
-# end
-
 require 'rspec'
-require "catasta/core/parslet_parser"
+require "catasta/core/app"
 
 RSpec.configure do |config|
   # Use color in STDOUT
@@ -38,10 +14,9 @@ end
 
 RSpec::Matchers.define :compile_to do |expected|
   match do |actual|
-    # puts "parse: #{CatastaParser.new.parse(actual)}"
-    parsed = CatastaParser.new.parse(actual)
+    parsed = Catasta::Parser.new.parse(actual)
     result = begin
-      CatastaRubyTransform.new.apply(parsed).generate
+      Catasta::Ruby::Transform.new.apply(parsed).generate(outputter: PutsOutputter.new)
     rescue
       puts "Failed while transforming" 
       pp parsed
@@ -59,8 +34,20 @@ RSpec::Matchers.define :compile_to do |expected|
   end
 end
 
+class PutsOutputter
+  def preamble
+    nil
+  end
+  def print(str)
+    "puts #{str}"
+  end
+  def postamble
+    nil
+  end
+end
 
-describe CatastaRubyTransform do
+
+describe Catasta::Ruby do
   describe :basics do
     it "should process static text" do
       <<INPUT.should compile_to(<<OUTPUT)

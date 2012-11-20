@@ -10,7 +10,8 @@ end
 require "catasta/core/app"
 
 options = {
-  header: true
+  header: true,
+  format: "json"
 }
 input_file = nil
 output_directory = nil
@@ -25,6 +26,9 @@ op = OptionParser.new do |opts|
   opts.on("--[no-]header", "Enable or disable the header at the top of generated files.") do |h|
     options[:header] = h
   end
+  opts.on("--format FORMAT", ["file", "stdout", "json"], "Format of content to output") do |f|
+    options[:format] = f
+  end
   # No argument, shows at tail.  This will print an options summary.
   opts.on_tail("-h", "--help", "Show this message") do
     puts opts
@@ -36,8 +40,13 @@ op.parse!
 input_file = ARGV.shift
 output_directory = ARGV.shift
 
-if !input_file || !output_directory
+if !input_file || (options[:format] == "file" && !output_directory)
   puts op.help
+  exit 1
+end
+
+if options[:format] == "stdout" && options[:targets].size != 1
+  puts "stdout format only works when outputting exactly one target"
   exit 1
 end
 
