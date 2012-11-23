@@ -26,8 +26,13 @@ class Parser < Parslet::Parser
   rule(:string) { str('"') >> (str('"').absent? >> any).repeat.as(:raw_string) >> str('"') }
   rule(:integer) { match('[0-9]').repeat(1).as(:int_literal) }
   rule(:ruby) { (str(END_TOKEN).absent? >> any).repeat.as(:ruby) }
+
+  # Unary Commands
+  rule(:partial) { str('>') >> space? >> ident.as(:partial_name) }
   rule(:expression) { (str('=') >> space? >> (string | integer | ruby)).as(:expression) }
   rule(:comment) { (str('#') >> ruby) }
+
+  # Block Commands
   rule(:loop_list) { 
     tag(
       str('for') >> space >> ident.as(:i) >> space >> str('in') >> space >> ident.as(:collection)
@@ -55,7 +60,7 @@ class Parser < Parslet::Parser
     simple_tag('/if') >> 
     newline?
   }
-  rule(:unary_catasta) { expression | comment}
+  rule(:unary_catasta) { partial | expression | comment}
 
   rule(:catasta_with_matching_tags) { loop_list | loop_map | iff }
 

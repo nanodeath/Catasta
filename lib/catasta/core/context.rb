@@ -6,6 +6,8 @@ class Context
   def initialize(options={})
     @scopes = []
     @outputter = options[:outputter] or raise "No outputter given"
+    @path = (options[:path] || ENV["CATASTA_PATH"] || "").split(":")
+    @transform = options[:transform]
 
     @indent = 0
     @whitespace = " "
@@ -42,6 +44,24 @@ class Context
   end
   def pad(str)
     @whitespace * @indent * @indent_multiplier + str
+  end
+  def render_file(partial_name)
+    extensions = [".cat", ".cata", ".catasta"]
+    result = nil
+    file_matches = @path.product(extensions).map do |(path, extension)|
+      candidate = File.join(path, "#{partial_name}#{extension}")
+      if File.exist? candidate
+        candidate
+      else
+        nil
+      end
+    end.compact
+    if !file_matches.empty?
+      parsed = Catasta::Parser.new.parse(File.read(file_matches.first))
+      @transform.apply(parsed).generate(self).chomp
+    else
+      raise "File not found: #{partial_name}{#{extensions.join('|')}} (searched #{@path.inspect})."
+    end
   end
 end
 end

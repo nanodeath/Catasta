@@ -35,6 +35,12 @@ class Transform < Parslet::Transform
   ) { 
     ''
   }
+
+  rule(
+    partial_name: simple(:partial_name)
+  ) {
+    TemplateInclude.new(partial_name)
+  }
   
   rule(
     loop: {

@@ -16,7 +16,8 @@ RSpec::Matchers.define :compile_to do |expected|
   match do |actual|
     parsed = Catasta::Parser.new.parse(actual)
     result = begin
-      Catasta::Ruby::Transform.new.apply(parsed).generate(outputter: PutsOutputter.new)
+      transform = Catasta::Ruby::Transform.new
+      transform.apply(parsed).generate(outputter: PutsOutputter.new, path: File.dirname(__FILE__), transform: transform)
     rescue
       puts "Failed while transforming" 
       pp parsed
@@ -166,6 +167,19 @@ _params[:content].each_pair do |k, v|
   puts "</li>\\n"
 end
 puts "</ol>\\n"
+OUTPUT
+    end
+
+    it "should process partials" do
+      <<INPUT.should compile_to(<<OUTPUT)
+<div class="person">
+  {{> person}}
+</div>
+INPUT
+puts "<div class=\"person\">\\n  "
+puts "Name: "
+puts _params[:name]
+puts "</div>\\n"
 OUTPUT
     end
   end
