@@ -23,7 +23,8 @@ class VariableLookup < Struct.new(:var)
     else
       ""
     end
-    memo
+  end
+  memo
 end
 CODE
 	end

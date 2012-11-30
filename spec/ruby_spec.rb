@@ -31,7 +31,7 @@ RSpec::Matchers.define :compile_to do |expected|
   end
 
   failure_message_for_should do |actual|
-    "expected #{expected}, got #{@result}"
+    "expected:\n#{expected}, got:\n#@result"
   end
 end
 
@@ -83,7 +83,8 @@ puts [:name].inject(_params[:person]) do |memo, val|
     else
       ""
     end
-    memo
+  end
+  memo
 end
 puts "!\\nThe weather is "
 puts [:today,:seattle].inject(_params[:weather]) do |memo, val|
@@ -95,7 +96,8 @@ puts [:today,:seattle].inject(_params[:weather]) do |memo, val|
     else
       ""
     end
-    memo
+  end
+  memo
 end
 puts ".\\n"
 OUTPUT
