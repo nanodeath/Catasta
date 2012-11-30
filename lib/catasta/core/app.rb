@@ -1,5 +1,6 @@
 require_relative "parser"
 require_relative "../ruby/transform"
+require_relative "../javascript/transform"
 
 module Catasta
   class App

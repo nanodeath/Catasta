@@ -1,26 +1,15 @@
 require_relative "spec_helper"
+require "catasta/javascript/outputter/array_buffer"
 require 'rspec/expectations'
 
-class PutsOutputter
-  def preamble
-    nil
-  end
-  def print(str)
-    "puts #{str}"
-  end
-  def postamble
-    nil
-  end
-end
 
-
-describe Catasta::Ruby do
+describe Catasta::JavaScript do
   matcher :compile_to do |expected|
     match do |actual|
       parsed = Catasta::Parser.new.parse(actual)
       result = begin
-        transform = Catasta::Ruby::Transform.new
-        transform.apply(parsed).generate(outputter: PutsOutputter.new, path: File.dirname(__FILE__), transform: transform)
+        transform = Catasta::JavaScript::Transform.new
+        transform.apply(parsed).generate(outputter: Catasta::JavaScript::ArrayBuffer.new, path: File.dirname(__FILE__), transform: transform)
       rescue
         puts "Failed while transforming" 
         pp parsed
@@ -43,7 +32,9 @@ describe Catasta::Ruby do
       <<INPUT.should compile_to(<<OUTPUT)
 Hello world!
 INPUT
-puts "Hello world!\\n"
+var _arr = [];
+_arr.push("Hello world!\\n");
+return _arr.join();
 OUTPUT
     end
 
@@ -51,12 +42,14 @@ OUTPUT
       <<INPUT.should compile_to(<<OUTPUT)
 Hello {{= name}}!
 INPUT
-puts "Hello "
-puts _params[:name]
-puts "!\\n"
+var _arr = [];
+_arr.push("Hello ");
+_arr.push(_params['name']);
+_arr.push("!\\n");
+return _arr.join();
 OUTPUT
     end
-
+=begin
     it "should process nested variables" do
       <<INPUT.should compile_to(<<OUTPUT)
 Hello {{= person.name}}!
@@ -206,5 +199,6 @@ puts _params[:name]
 puts "</div>\\n"
 OUTPUT
     end
+=end
   end
 end
