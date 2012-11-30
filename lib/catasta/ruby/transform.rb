@@ -6,10 +6,18 @@ module Catasta::Ruby
 class Transform < Parslet::Transform
   rule(
     expression: { 
-      ruby: simple(:ruby) 
+      ident: simple(:ident) 
     }
   ) {
-    Code.new(VariableLookup.new(ruby))
+    Code.new(VariableLookup.new(ident))
+  }
+
+  rule(
+    expression: { 
+      ident: simple(:ident) 
+    }
+  ) {
+    Code.new(VariableLookup.new(ident))
   }
 
   rule(
@@ -37,15 +45,17 @@ class Transform < Parslet::Transform
   }
 
   rule(
-    partial_name: simple(:partial_name)
+    partial_name: {
+      ident: simple(:partial_name)
+    }
   ) {
     TemplateInclude.new(partial_name)
   }
   
   rule(
     loop: {
-      i: simple(:i),
-      collection: simple(:collection)
+      i: {ident: simple(:i)},
+      collection: {ident: simple(:collection)}
     },
     content: sequence(:nodes)
   ) {
@@ -54,9 +64,9 @@ class Transform < Parslet::Transform
 
   rule(
     loop_map: {
-      loop_key: simple(:loop_key),
-      loop_value: simple(:loop_value),
-      collection: simple(:collection)
+      loop_key: {ident: simple(:loop_key)},
+      loop_value: {ident: simple(:loop_value)},
+      collection: {ident: simple(:collection)}
     },
     content: sequence(:nodes)
   ) {
@@ -65,7 +75,9 @@ class Transform < Parslet::Transform
   
   rule(
     condition: {
-      variable: simple(:variable),
+      variable: {
+        ident: simple(:variable),
+      },
       inverted: simple(:inverted)
     },
     content: sequence(:nodes)

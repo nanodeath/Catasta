@@ -68,6 +68,39 @@ puts "!\\n"
 OUTPUT
     end
 
+    it "should process nested variables" do
+      <<INPUT.should compile_to(<<OUTPUT)
+Hello {{= person.name}}!
+The weather is {{= weather.today.seattle}}.
+INPUT
+puts "Hello "
+puts [:name].inject(_params[:person]) do |memo, val|
+  if memo != ""
+    memo = if memo.respond_to?(val)
+      memo.send(val)
+    elsif memo.respond_to?(:[])
+      memo[val]
+    else
+      ""
+    end
+    memo
+end
+puts "!\\nThe weather is "
+puts [:today,:seattle].inject(_params[:weather]) do |memo, val|
+  if memo != ""
+    memo = if memo.respond_to?(val)
+      memo.send(val)
+    elsif memo.respond_to?(:[])
+      memo[val]
+    else
+      ""
+    end
+    memo
+end
+puts ".\\n"
+OUTPUT
+    end
+
     it "should process evaluation of strings" do
       <<INPUT.should compile_to(<<OUTPUT)
 Hello {{= "Bob"}}!

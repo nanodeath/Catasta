@@ -13,8 +13,12 @@ class Parser < Parslet::Parser
     str(START_TOKEN) >> nodes >> str(END_TOKEN) >> newline?
   end
 
-  def ident
+  def single_ident
     match("[a-zA-Z]") >> match("[a-zA-Z0-9_]").repeat
+  end
+
+  def ident
+    (str("@").maybe >> single_ident >> (str('.') >> single_ident).repeat).as(:ident)
   end
 
   rule(:space)  { match('\s').repeat(1) }
@@ -29,7 +33,7 @@ class Parser < Parslet::Parser
 
   # Unary Commands
   rule(:partial) { str('>') >> space? >> ident.as(:partial_name) }
-  rule(:expression) { (str('=') >> space? >> (string | integer | ruby)).as(:expression) }
+  rule(:expression) { (str('=') >> space? >> (string | integer | ident | ruby)).as(:expression) }
   rule(:comment) { (str('#') >> ruby) }
 
   # Block Commands
