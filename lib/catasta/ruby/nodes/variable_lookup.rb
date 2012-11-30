@@ -14,7 +14,7 @@ class VariableLookup < Struct.new(:var)
     	target
     else
     	<<CODE.chomp
-[#{parts.map {|p| ":#{p}"}.join(',')}].inject(#{target}) do |memo, val|
+[#{parts.map {|p| ":#{p}"}.join(',')}].inject(#{target}) {|memo, val|
   if memo != ""
     memo = if memo.respond_to?(val)
       memo.send(val)
@@ -25,7 +25,7 @@ class VariableLookup < Struct.new(:var)
     end
   end
   memo
-end
+}
 CODE
 	end
   end

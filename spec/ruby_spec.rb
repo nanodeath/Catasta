@@ -74,7 +74,7 @@ Hello {{= person.name}}!
 The weather is {{= weather.today.seattle}}.
 INPUT
 puts "Hello "
-puts [:name].inject(_params[:person]) do |memo, val|
+puts [:name].inject(_params[:person]) {|memo, val|
   if memo != ""
     memo = if memo.respond_to?(val)
       memo.send(val)
@@ -85,9 +85,9 @@ puts [:name].inject(_params[:person]) do |memo, val|
     end
   end
   memo
-end
+}
 puts "!\\nThe weather is "
-puts [:today,:seattle].inject(_params[:weather]) do |memo, val|
+puts [:today,:seattle].inject(_params[:weather]) {|memo, val|
   if memo != ""
     memo = if memo.respond_to?(val)
       memo.send(val)
@@ -98,7 +98,7 @@ puts [:today,:seattle].inject(_params[:weather]) do |memo, val|
     end
   end
   memo
-end
+}
 puts ".\\n"
 OUTPUT
     end
