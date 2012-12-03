@@ -119,7 +119,6 @@ _arr.push("</ol>\\n");
 OUTPUT
     end
 
-=begin
     it "should process loops over arrays with indexes" do
       <<INPUT.should compile_to(<<OUTPUT)
 <ol>
@@ -128,18 +127,19 @@ OUTPUT
 {{/for}}
 </ol>
 INPUT
-puts "<ol>\\n"
-_params[:content].each_with_index do |c, _c_index|
-  puts "  <li>"
-  puts _c_index
-  puts ": "
-  puts c
-  puts "</li>\\n"
-end
-puts "</ol>\\n"
+_arr.push("<ol>\\n");
+(_params['content'] || []).forEach(function(c, _c_index){
+  _arr.push("  <li>");
+  _arr.push(_c_index);
+  _arr.push(": ");
+  _arr.push(c);
+  _arr.push("</li>\\n");
+});
+_arr.push("</ol>\\n");
 OUTPUT
     end
 
+=begin
     it "should process basic conditionals" do
       <<INPUT.should compile_to(<<OUTPUT)
 {{if monkey}}
