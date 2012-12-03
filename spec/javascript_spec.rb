@@ -90,18 +90,18 @@ _arr.push("Bob");
 _arr.push("!\\n");
 OUTPUT
     end
-=begin
 
     it "should process evaluation of integers" do
       <<INPUT.should compile_to(<<OUTPUT)
 Hello, it is {{= 1}} o'clock!  '
 INPUT
-puts "Hello, it is "
-puts 1
-puts " o'clock!  '\\n"
+_arr.push("Hello, it is ");
+_arr.push(1);
+_arr.push(" o'clock!  '\\n");
 OUTPUT
     end
 
+=begin
     it "should process loops over arrays" do
       <<INPUT.should compile_to(<<OUTPUT)
 <ol>
