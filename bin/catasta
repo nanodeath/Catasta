@@ -2,6 +2,8 @@
 
 require 'optparse'
 
+$: << "lib"
+
 require 'term/ansicolor'
 class String
   include Term::ANSIColor
@@ -45,9 +47,13 @@ if !input_file || (options[:format] == "file" && !output_directory)
   exit 1
 end
 
-if options[:format] == "stdout" && options[:targets].size != 1
-  puts "stdout format only works when outputting exactly one target"
-  exit 1
+if ["stdout", "-"].include?(options[:format])
+  if options[:targets].size != 1
+    puts "stdout format only works when outputting exactly one target"
+    exit 1
+  end
+  options[:format] = "stdout"
+  output_directory = $stdout
 end
 
 unless File.exist? input_file

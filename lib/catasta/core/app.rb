@@ -10,7 +10,7 @@ module Catasta
 
     def go(template_string, options={})
       parsed = Parser.new.parse(template_string)
-      transformed = Ruby::Transform.new.apply(parsed).generate
+      transformed = Ruby::Transform.new.apply(parsed).generate(@options.merge(options))
       return transformed
     end
   end

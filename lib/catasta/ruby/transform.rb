@@ -103,7 +103,7 @@ class Transform < Parslet::Transform
   rule(
     root: subtree(:nodes)
   ) {
-    Root.new(nodes)
+    Root.new(nodes, @options)
   }
 end
 end
