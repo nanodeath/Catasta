@@ -2,6 +2,17 @@ require_relative "spec_helper"
 require "catasta/javascript/outputter/array_buffer"
 require 'rspec/expectations'
 
+class BareArrayOutputter
+  def preamble
+    nil
+  end
+  def print(str)
+    "_arr.push(#{str});"
+  end
+  def postamble
+    nil
+  end
+end
 
 describe Catasta::JavaScript do
   matcher :compile_to do |expected|
@@ -9,7 +20,7 @@ describe Catasta::JavaScript do
       parsed = Catasta::Parser.new.parse(actual)
       result = begin
         transform = Catasta::JavaScript::Transform.new
-        transform.apply(parsed).generate(outputter: Catasta::JavaScript::ArrayBuffer.new, path: File.dirname(__FILE__), transform: transform)
+        transform.apply(parsed).generate(outputter: BareArrayOutputter.new, path: File.dirname(__FILE__), transform: transform)
       rescue
         puts "Failed while transforming" 
         pp parsed
@@ -32,9 +43,7 @@ describe Catasta::JavaScript do
       <<INPUT.should compile_to(<<OUTPUT)
 Hello world!
 INPUT
-var _arr = [];
 _arr.push("Hello world!\\n");
-return _arr.join();
 OUTPUT
     end
 
@@ -42,48 +51,36 @@ OUTPUT
       <<INPUT.should compile_to(<<OUTPUT)
 Hello {{= name}}!
 INPUT
-var _arr = [];
 _arr.push("Hello ");
 _arr.push(_params['name']);
 _arr.push("!\\n");
-return _arr.join();
 OUTPUT
     end
-=begin
     it "should process nested variables" do
       <<INPUT.should compile_to(<<OUTPUT)
 Hello {{= person.name}}!
 The weather is {{= weather.today.seattle}}.
 INPUT
-puts "Hello "
-puts [:name].inject(_params[:person]) {|memo, val|
-  if memo != ""
-    memo = if memo.respond_to?(val)
-      memo.send(val)
-    elsif memo.respond_to?(:[])
-      memo[val]
-    else
-      ""
-    end
-  end
-  memo
-}
-puts "!\\nThe weather is "
-puts [:today,:seattle].inject(_params[:weather]) {|memo, val|
-  if memo != ""
-    memo = if memo.respond_to?(val)
-      memo.send(val)
-    elsif memo.respond_to?(:[])
-      memo[val]
-    else
-      ""
-    end
-  end
-  memo
-}
-puts ".\\n"
+_arr.push("Hello ");
+_arr.push(['name'].reduce(function(memo, field){
+  if(memo){
+    return memo[field];
+  } else {
+    return "";
+  }
+}, _params['person']));
+_arr.push("!\\nThe weather is ");
+_arr.push(['today','seattle'].reduce(function(memo, field){
+  if(memo){
+    return memo[field];
+  } else {
+    return "";
+  }
+}, _params['weather']));
+_arr.push(".\\n");
 OUTPUT
     end
+=begin
 
     it "should process evaluation of strings" do
       <<INPUT.should compile_to(<<OUTPUT)

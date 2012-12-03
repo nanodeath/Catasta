@@ -14,18 +14,13 @@ class VariableLookup < Struct.new(:var)
     	target
     else
     	<<CODE.chomp
-[#{parts.map {|p| ":#{p}"}.join(',')}].inject(#{target}) {|memo, val|
-  if memo != ""
-    memo = if memo.respond_to?(val)
-      memo.send(val)
-    elsif memo.respond_to?(:[])
-      memo[val]
-    else
-      ""
-    end
-  end
-  memo
-}
+[#{parts.map {|p| "'#{p}'"}.join(',')}].reduce(function(memo, field){
+  if(memo){
+    return memo[field];
+  } else {
+    return "";
+  }
+}, #{target})
 CODE
 	end
   end
