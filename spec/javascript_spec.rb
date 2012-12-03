@@ -80,17 +80,17 @@ _arr.push(['today','seattle'].reduce(function(memo, field){
 _arr.push(".\\n");
 OUTPUT
     end
-=begin
 
     it "should process evaluation of strings" do
       <<INPUT.should compile_to(<<OUTPUT)
 Hello {{= "Bob"}}!
 INPUT
-puts "Hello "
-puts "Bob"
-puts "!\\n"
+_arr.push("Hello ");
+_arr.push("Bob");
+_arr.push("!\\n");
 OUTPUT
     end
+=begin
 
     it "should process evaluation of integers" do
       <<INPUT.should compile_to(<<OUTPUT)
