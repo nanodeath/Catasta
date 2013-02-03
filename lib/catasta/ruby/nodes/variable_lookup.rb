@@ -13,8 +13,8 @@ class VariableLookup < Struct.new(:var)
     if !parts
     	target
     else
-    	<<CODE.chomp
-[#{parts.map {|p| ":#{p}"}.join(',')}].inject(#{target}) {|memo, val|
+    	code = <<CODE.chomp
+[#{parts.map {|p| ":#{p}"}.join(',')}].inject(#{target}) do |memo, val|
   if memo != ""
     memo = if memo.respond_to?(val)
       memo.send(val)
@@ -25,9 +25,12 @@ class VariableLookup < Struct.new(:var)
     end
   end
   memo
-}
+end
 CODE
-	end
+      split = code.split("\n")
+      split = [split[0]] + split[1..-1].map {|s| ctx.pad s}
+      split.join("\n")
+  	end
   end
 end
 end

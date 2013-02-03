@@ -22,9 +22,9 @@ class Loop < Struct.new(:loop_var, :collection, :nodes)
     end
     
     if special_loop_scope.get_resolve_count(user_index_variable) > 0
-      ctx.pad %Q{#{collection.render(ctx)}.each_with_index do |#{loop_var}, #{generate_index_variable(user_index_variable)}|\n} + inner + "\nend"
+      ctx.pad %Q{#{collection.render(ctx)}.each_with_index do |#{loop_var}, #{generate_index_variable(user_index_variable)}|\n} + inner + "\n" + ctx.pad("end")
     else
-      ctx.pad %Q{#{collection.render(ctx)}.each do |#{loop_var}|\n} + inner + "\nend"
+      ctx.pad %Q{#{collection.render(ctx)}.each do |#{loop_var}|\n} + inner + "\n" + ctx.pad("end")
     end
   end
 end

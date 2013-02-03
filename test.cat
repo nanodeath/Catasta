@@ -1,20 +1,3 @@
----
-doctype: html5
-parameters:
-  page: int
-  content: list of str
-  map: map of str:str
-  users: list of obj
----
-target: Ruby
-module: Test
-class: Test1
----
-target: Java15
-class: name.maxaller.TestCurly
----
-target: Javascript5
----
 <div>
   {{= 1}}
   {{= "foo"}}

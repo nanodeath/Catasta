@@ -13,22 +13,22 @@ require "catasta/core/app"
 
 options = {
   header: true,
-  format: "json"
+  format: "raw"
 }
 input_file = nil
 output_directory = nil
 op = OptionParser.new do |opts|
-  opts.banner = "Usage: ruby #{File.basename $0} [options] input_file output_directory/"
+  opts.banner = "Usage: ruby #{File.basename $0} [options] [INPUT] [OUTPUT]"
   opts.on("-v", "--[no-]verbose", "Run verbosely") do |v|
     options[:verbose] = v
   end
-  opts.on("-t", "--targets x,y,z", Array, "Type(s) to output, e.g. Java15, Ruby.") do |t|
+  opts.on("-t", "--targets x,y,z", Array, "Type to output, e.g. Java15, Ruby.") do |t|
     options[:targets] = t
   end
   opts.on("--[no-]header", "Enable or disable the header at the top of generated files.") do |h|
     options[:header] = h
   end
-  opts.on("--format FORMAT", ["file", "stdout", "json"], "Format of content to output") do |f|
+  opts.on("--format FORMAT", ["raw", "json"], "Format of content to output") do |f|
     options[:format] = f
   end
   # No argument, shows at tail.  This will print an options summary.
@@ -39,26 +39,26 @@ op = OptionParser.new do |opts|
 end
 op.parse!
 
-input_file = ARGV.shift
-output_directory = ARGV.shift
+input = ARGV.shift
+output = ARGV.shift
 
-if !input_file || (options[:format] == "file" && !output_directory)
-  puts op.help
-  exit 1
-end
+# if !input_file || (options[:format] == "file" && !output_directory)
+#   puts op.help
+#   exit 1
+# end
 
-if ["stdout", "-"].include?(options[:format])
-  if options[:targets].size != 1
-    puts "stdout format only works when outputting exactly one target"
-    exit 1
-  end
-  options[:format] = "stdout"
-  output_directory = $stdout
-end
+# if ["stdout", "-"].include?(options[:format])
+#   if options[:targets].size != 1
+#     puts "stdout format only works when outputting exactly one target"
+#     exit 1
+#   end
+#   options[:format] = "stdout"
+#   output_directory = $stdout
+# end
 
-unless File.exist? input_file
-  $stderr.puts "File not found: `#{input_file}`"
-  exit
-end
+# unless File.exist? input_file
+#   $stderr.puts "File not found: `#{input_file}`"
+#   exit
+# end
 
-Catasta::App.new(options).go(File.read(input_file), output_directory: output_directory)
+Catasta::App.new(options).go(input: input, output: output)

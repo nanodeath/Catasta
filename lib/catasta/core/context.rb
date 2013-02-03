@@ -2,6 +2,7 @@ module Catasta
 class Context
   attr_reader :scopes
   attr_reader :outputter
+  attr_reader :data
 
   def initialize(options={})
     @scopes = []
@@ -12,6 +13,7 @@ class Context
     @indent = 0
     @whitespace = " "
     @indent_multiplier = 2
+    @data = {}
   end
   def write(obj, padding=true)
     if padding
