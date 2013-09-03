@@ -139,16 +139,16 @@ _arr.push("</ol>\\n");
 OUTPUT
     end
 
-=begin
     it "should process basic conditionals" do
+      # Objects?
       <<INPUT.should compile_to(<<OUTPUT)
 {{if monkey}}
   Monkey is truthy.
 {{/if}}
 INPUT
-if((_params[:monkey].is_a?(TrueClass)) || (_params[:monkey].is_a?(String) && _params[:monkey] != "") || (_params[:monkey].respond_to?(:empty?) && !_params[:monkey].empty?))
-  puts "  Monkey is truthy.\\n"
-end
+if((_params['monkey'] === true) || (typeof _params['monkey'] === "string" && _params['monkey'] !== "") || (typeof _params['monkey'] === "number" && _params['monkey'] !== 0) || (typeof _params['monkey'] === "object" && Object.keys(_params['monkey']).length > 0)) {
+  _arr.push("  Monkey is truthy.\\n");
+}
 OUTPUT
     end
 
@@ -158,9 +158,9 @@ OUTPUT
   Monkey is falsey.
 {{/if}}
 INPUT
-if((_params[:monkey].nil?) || (_params[:monkey].is_a?(FalseClass)) || (_params[:monkey] == "") || (_params[:monkey].respond_to?(:empty?) && _params[:monkey].empty?))
-  puts "  Monkey is falsey.\\n"
-end
+if((_params['monkey'] === null) || (_params['monkey'] === false) || (_params['monkey'] === "") || (_params['monkey'] === 0) || (typeof _params['monkey'] === "object" && Object.keys(_params['monkey']).length === 0)) {
+  _arr.push("  Monkey is falsey.\\n");
+}
 OUTPUT
     end
 
@@ -172,15 +172,16 @@ OUTPUT
 {{/for}}
 </ol>
 INPUT
-puts "<ol>\\n"
-_params[:content].each_pair do |k, v|
-  puts "  <li>"
-  puts k
-  puts ": "
-  puts v
-  puts "</li>\\n"
-end
-puts "</ol>\\n"
+_arr.push("<ol>\\n");
+Object.keys(_params['content']).forEach(function(k){
+  var v = _params['content'][k];
+  _arr.push("  <li>");
+  _arr.push(k);
+  _arr.push(": ");
+  _arr.push(v);
+  _arr.push("</li>\\n");
+}
+_arr.push("</ol>\\n");
 OUTPUT
     end
 
@@ -190,12 +191,13 @@ OUTPUT
   {{> person}}
 </div>
 INPUT
-puts "<div class=\"person\">\\n  "
-puts "Name: "
-puts _params[:name]
-puts "</div>\\n"
+_arr.push('<div class="person">\\n  ');
+_arr.push("Name: ");
+_arr.push(_params['name']);
+_arr.push("</div>\\n");
 OUTPUT
     end
+=begin
 =end
   end
 end

@@ -9,7 +9,9 @@ class LoopMap < Struct.new(:loop_key, :loop_value, :collection, :nodes)
     inner = ctx.add_scope(s) do
       ctx.indent { nodes.map {|n| n.render(ctx)}.join("\n") }
     end
-    ctx.pad %Q{#{collection.render(ctx)}.each_pair do |#{loop_key}, #{loop_value}|\n} + inner + "\nend"
+
+    inner = ctx.indent { ctx.pad("var #{loop_value} = #{collection.render(ctx)}[#{loop_key}];\n") } + inner
+    ctx.pad %Q<Object.keys(#{collection.render(ctx)}).forEach(function(#{loop_key}){\n> + inner + "\n}"
   end
 end
 end

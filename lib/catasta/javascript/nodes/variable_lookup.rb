@@ -13,7 +13,7 @@ class VariableLookup < Struct.new(:var)
     if !parts
     	target
     else
-    	<<CODE.chomp
+    	<<CODE.chomp.split("\n").map {|l| ctx.pad l}.tap {|lines| lines.first.lstrip!}.join("\n")
 [#{parts.map {|p| "'#{p}'"}.join(',')}].reduce(function(memo, field){
   if(memo){
     return memo[field];

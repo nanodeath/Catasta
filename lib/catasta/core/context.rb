@@ -33,6 +33,8 @@ class Context
   def pop_scope
     @scopes.shift
   end
+  # Signals the next content should be indented by another tab.
+  # Doesn't actually indent the text though!  Use #pad(str) for that.
   def indent
     @indent += 1
     if block_given?

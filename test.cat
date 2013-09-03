@@ -1,10 +1,10 @@
-<div>
+ q<div>
   {{= 1}}
   {{= "foo"}}
   <span>You are on page {{= page}}</span>
   <ul>
   {{for c in content}}
-    {{if !c}}
+    {{if c}}
     <li>{{=c}}</li>
     {{/if}}
   {{/for}}
