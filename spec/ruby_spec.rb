@@ -22,7 +22,7 @@ describe Catasta::Ruby do
         transform = Catasta::Ruby::Transform.new
         transform.apply(parsed).generate(outputter: PutsOutputter.new, path: File.dirname(__FILE__), transform: transform)
       rescue
-        puts "Failed while transforming" 
+        puts "Failed while transforming"
         pp parsed
         raise
       end
@@ -63,7 +63,7 @@ Hello {{= person.name}}!
 The weather is {{= weather.today.seattle}}.
 INPUT
 puts "Hello "
-puts [:name].inject(_params[:person]) {|memo, val|
+puts [:name].inject(_params[:person]) do |memo, val|
   if memo != ""
     memo = if memo.respond_to?(val)
       memo.send(val)
@@ -74,9 +74,9 @@ puts [:name].inject(_params[:person]) {|memo, val|
     end
   end
   memo
-}
+end
 puts "!\\nThe weather is "
-puts [:today,:seattle].inject(_params[:weather]) {|memo, val|
+puts [:today,:seattle].inject(_params[:weather]) do |memo, val|
   if memo != ""
     memo = if memo.respond_to?(val)
       memo.send(val)
@@ -87,7 +87,7 @@ puts [:today,:seattle].inject(_params[:weather]) {|memo, val|
     end
   end
   memo
-}
+end
 puts ".\\n"
 OUTPUT
     end
@@ -151,12 +151,13 @@ OUTPUT
     end
 
     it "should process basic conditionals" do
+      # (_params[:monkey].is_a?(TrueClass)) || (_params[:monkey].is_a?(String) && _params[:monkey] != "") || (_params[:monkey].respond_to?(:empty?) && !_params[:monkey].empty?)
       <<INPUT.should compile_to(<<OUTPUT)
 {{if monkey}}
   Monkey is truthy.
 {{/if}}
 INPUT
-if((_params[:monkey].is_a?(TrueClass)) || (_params[:monkey].is_a?(String) && _params[:monkey] != "") || (_params[:monkey].respond_to?(:empty?) && !_params[:monkey].empty?))
+if(Catasta::Conditional.truthy(_params[:monkey]))
   puts "  Monkey is truthy.\\n"
 end
 OUTPUT
@@ -168,7 +169,7 @@ OUTPUT
   Monkey is falsey.
 {{/if}}
 INPUT
-if((_params[:monkey].nil?) || (_params[:monkey].is_a?(FalseClass)) || (_params[:monkey] == "") || (_params[:monkey].respond_to?(:empty?) && _params[:monkey].empty?))
+if(Catasta::Conditional.falsey(_params[:monkey]))
   puts "  Monkey is falsey.\\n"
 end
 OUTPUT

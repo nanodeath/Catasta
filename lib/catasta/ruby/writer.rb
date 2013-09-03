@@ -22,6 +22,8 @@ EOF
 		elsif File.directory? @options[:output]
 			name = @options[:input].split(".").first + ".rb"
 			File.open("#{@options[:output]}/#{name}", 'w') {|h| h.write(template)}
+		else
+			raise ArgumentError, "Output was not - or a directory"
 		end
 	end
 end

@@ -22,7 +22,7 @@ describe Catasta::JavaScript do
         transform = Catasta::JavaScript::Transform.new
         transform.apply(parsed).generate(outputter: BareArrayOutputter.new, path: File.dirname(__FILE__), transform: transform)
       rescue
-        puts "Failed while transforming" 
+        puts "Failed while transforming"
         pp parsed
         raise
       end
