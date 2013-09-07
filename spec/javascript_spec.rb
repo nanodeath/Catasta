@@ -146,7 +146,7 @@ OUTPUT
   Monkey is truthy.
 {{/if}}
 INPUT
-if(((_params['monkey'] === true) || (typeof _params['monkey'] === "string" && _params['monkey'] !== "") || (typeof _params['monkey'] === "number" && _params['monkey'] !== 0) || (typeof _params['monkey'] === "object" && Object.keys(_params['monkey']).length > 0))) {
+if(_truthy(_params['monkey'])) {
   _arr.push("  Monkey is truthy.\\n");
 }
 OUTPUT
@@ -158,7 +158,7 @@ OUTPUT
   Monkey is falsey.
 {{/if}}
 INPUT
-if(((_params['monkey'] === null) || (_params['monkey'] === false) || (_params['monkey'] === "") || (_params['monkey'] === 0) || (typeof _params['monkey'] === "object" && Object.keys(_params['monkey']).length === 0))) {
+if(_falsey(_params['monkey'])) {
   _arr.push("  Monkey is falsey.\\n");
 }
 OUTPUT
@@ -172,7 +172,7 @@ OUTPUT
   Monkey is falsey.
 {{/if}}
 INPUT
-if(((_params['monkey'] === true) || (typeof _params['monkey'] === "string" && _params['monkey'] !== "") || (typeof _params['monkey'] === "number" && _params['monkey'] !== 0) || (typeof _params['monkey'] === "object" && Object.keys(_params['monkey']).length > 0))) {
+if(_truthy(_params['monkey'])) {
   _arr.push("  Monkey is truthy.\\n");
 } else {
   _arr.push("  Monkey is falsey.\\n");
@@ -192,11 +192,11 @@ OUTPUT
   There is no truth.
 {{/if}}
 INPUT
-if(((_params['monkey'] === true) || (typeof _params['monkey'] === "string" && _params['monkey'] !== "") || (typeof _params['monkey'] === "number" && _params['monkey'] !== 0) || (typeof _params['monkey'] === "object" && Object.keys(_params['monkey']).length > 0))) {
+if(_truthy(_params['monkey'])) {
   _arr.push("  Monkey is truthy.\\n");
-} else if(((_params['dog'] === true) || (typeof _params['dog'] === "string" && _params['dog'] !== "") || (typeof _params['dog'] === "number" && _params['dog'] !== 0) || (typeof _params['dog'] === "object" && Object.keys(_params['dog']).length > 0))) {
+} else if(_truthy(_params['dog'])) {
   _arr.push("  Dog is the truth\\n");
-} else if(((_params['cat'] === true) || (typeof _params['cat'] === "string" && _params['cat'] !== "") || (typeof _params['cat'] === "number" && _params['cat'] !== 0) || (typeof _params['cat'] === "object" && Object.keys(_params['cat']).length > 0))) {
+} else if(_truthy(_params['cat'])) {
   _arr.push("  Cat is the truth\\n");
 } else {
   _arr.push("  There is no truth.\\n");
@@ -213,10 +213,10 @@ OUTPUT
   Dog or banana are truthy.
 {{/if}}
 INPUT
-if(((_params['monkey'] === true) || (typeof _params['monkey'] === "string" && _params['monkey'] !== "") || (typeof _params['monkey'] === "number" && _params['monkey'] !== 0) || (typeof _params['monkey'] === "object" && Object.keys(_params['monkey']).length > 0)) && ((_params['banana'] === true) || (typeof _params['banana'] === "string" && _params['banana'] !== "") || (typeof _params['banana'] === "number" && _params['banana'] !== 0) || (typeof _params['banana'] === "object" && Object.keys(_params['banana']).length > 0))) {
+if(_truthy(_params['monkey']) && _truthy(_params['banana'])) {
   _arr.push("  Monkey and banana are truthy.\\n");
 }
-if(((_params['dog'] === true) || (typeof _params['dog'] === "string" && _params['dog'] !== "") || (typeof _params['dog'] === "number" && _params['dog'] !== 0) || (typeof _params['dog'] === "object" && Object.keys(_params['dog']).length > 0)) || ((_params['banana'] === true) || (typeof _params['banana'] === "string" && _params['banana'] !== "") || (typeof _params['banana'] === "number" && _params['banana'] !== 0) || (typeof _params['banana'] === "object" && Object.keys(_params['banana']).length > 0))) {
+if(_truthy(_params['dog']) || _truthy(_params['banana'])) {
   _arr.push("  Dog or banana are truthy.\\n");
 }
 OUTPUT
@@ -228,7 +228,7 @@ OUTPUT
   Monkey and banana and cat are truthy.
 {{/if}}
 INPUT
-if(((_params['monkey'] === true) || (typeof _params['monkey'] === "string" && _params['monkey'] !== "") || (typeof _params['monkey'] === "number" && _params['monkey'] !== 0) || (typeof _params['monkey'] === "object" && Object.keys(_params['monkey']).length > 0)) && ((_params['banana'] === true) || (typeof _params['banana'] === "string" && _params['banana'] !== "") || (typeof _params['banana'] === "number" && _params['banana'] !== 0) || (typeof _params['banana'] === "object" && Object.keys(_params['banana']).length > 0)) && ((_params['cat'] === true) || (typeof _params['cat'] === "string" && _params['cat'] !== "") || (typeof _params['cat'] === "number" && _params['cat'] !== 0) || (typeof _params['cat'] === "object" && Object.keys(_params['cat']).length > 0))) {
+if(_truthy(_params['monkey']) && _truthy(_params['banana']) && _truthy(_params['cat'])) {
   _arr.push("  Monkey and banana and cat are truthy.\\n");
 }
 OUTPUT
@@ -243,10 +243,10 @@ OUTPUT
   Monkey and banana or cat are truthy.
 {{/if}}
 INPUT
-if(((_params['monkey'] === true) || (typeof _params['monkey'] === "string" && _params['monkey'] !== "") || (typeof _params['monkey'] === "number" && _params['monkey'] !== 0) || (typeof _params['monkey'] === "object" && Object.keys(_params['monkey']).length > 0)) || ((_params['banana'] === true) || (typeof _params['banana'] === "string" && _params['banana'] !== "") || (typeof _params['banana'] === "number" && _params['banana'] !== 0) || (typeof _params['banana'] === "object" && Object.keys(_params['banana']).length > 0)) && ((_params['cat'] === true) || (typeof _params['cat'] === "string" && _params['cat'] !== "") || (typeof _params['cat'] === "number" && _params['cat'] !== 0) || (typeof _params['cat'] === "object" && Object.keys(_params['cat']).length > 0))) {
+if(_truthy(_params['monkey']) || _truthy(_params['banana']) && _truthy(_params['cat'])) {
   _arr.push("  Monkey or banana and cat are truthy.\\n");
 }
-if(((_params['monkey'] === true) || (typeof _params['monkey'] === "string" && _params['monkey'] !== "") || (typeof _params['monkey'] === "number" && _params['monkey'] !== 0) || (typeof _params['monkey'] === "object" && Object.keys(_params['monkey']).length > 0)) && ((_params['banana'] === true) || (typeof _params['banana'] === "string" && _params['banana'] !== "") || (typeof _params['banana'] === "number" && _params['banana'] !== 0) || (typeof _params['banana'] === "object" && Object.keys(_params['banana']).length > 0)) || ((_params['cat'] === true) || (typeof _params['cat'] === "string" && _params['cat'] !== "") || (typeof _params['cat'] === "number" && _params['cat'] !== 0) || (typeof _params['cat'] === "object" && Object.keys(_params['cat']).length > 0))) {
+if(_truthy(_params['monkey']) && _truthy(_params['banana']) || _truthy(_params['cat'])) {
   _arr.push("  Monkey and banana or cat are truthy.\\n");
 }
 OUTPUT
@@ -258,7 +258,7 @@ OUTPUT
   (Monkey or banana) and cat are truthy.
 {{/if}}
 INPUT
-if((((_params['monkey'] === true) || (typeof _params['monkey'] === "string" && _params['monkey'] !== "") || (typeof _params['monkey'] === "number" && _params['monkey'] !== 0) || (typeof _params['monkey'] === "object" && Object.keys(_params['monkey']).length > 0)) || ((_params['banana'] === true) || (typeof _params['banana'] === "string" && _params['banana'] !== "") || (typeof _params['banana'] === "number" && _params['banana'] !== 0) || (typeof _params['banana'] === "object" && Object.keys(_params['banana']).length > 0))) && ((_params['cat'] === true) || (typeof _params['cat'] === "string" && _params['cat'] !== "") || (typeof _params['cat'] === "number" && _params['cat'] !== 0) || (typeof _params['cat'] === "object" && Object.keys(_params['cat']).length > 0))) {
+if((_truthy(_params['monkey']) || _truthy(_params['banana'])) && _truthy(_params['cat'])) {
   _arr.push("  (Monkey or banana) and cat are truthy.\\n");
 }
 OUTPUT
