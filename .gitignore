@@ -4,3 +4,4 @@ build2
 .hg
 .hgignore
 *.gem
+Gemfile.lock.backup
