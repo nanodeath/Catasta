@@ -86,6 +86,7 @@ class Parser < Parslet::Parser
       #compound_condition# | condition)
     ).as(:condition) >>
     text_with_ruby >>
+    (tag(str('elsif') >> space >> logical_or_expression).as(:condition) >> text_with_ruby).repeat.as(:elsif) >>
     (simple_tag('else') >> text_with_ruby).maybe.as(:else) >>
     simple_tag('/if') >>
     newline?

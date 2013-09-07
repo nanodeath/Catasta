@@ -180,6 +180,30 @@ if(((_params['monkey'] === true) || (typeof _params['monkey'] === "string" && _p
 OUTPUT
     end
 
+    it "should process elsif blocks" do
+      <<INPUT.should compile_to(<<OUTPUT)
+{{if monkey}}
+  Monkey is truthy.
+{{elsif dog}}
+  Dog is the truth
+{{elsif cat}}
+  Cat is the truth
+{{else}}
+  There is no truth.
+{{/if}}
+INPUT
+if(((_params['monkey'] === true) || (typeof _params['monkey'] === "string" && _params['monkey'] !== "") || (typeof _params['monkey'] === "number" && _params['monkey'] !== 0) || (typeof _params['monkey'] === "object" && Object.keys(_params['monkey']).length > 0))) {
+  _arr.push("  Monkey is truthy.\\n");
+} else if(((_params['dog'] === true) || (typeof _params['dog'] === "string" && _params['dog'] !== "") || (typeof _params['dog'] === "number" && _params['dog'] !== 0) || (typeof _params['dog'] === "object" && Object.keys(_params['dog']).length > 0))) {
+  _arr.push("  Dog is the truth\\n");
+} else if(((_params['cat'] === true) || (typeof _params['cat'] === "string" && _params['cat'] !== "") || (typeof _params['cat'] === "number" && _params['cat'] !== 0) || (typeof _params['cat'] === "object" && Object.keys(_params['cat']).length > 0))) {
+  _arr.push("  Cat is the truth\\n");
+} else {
+  _arr.push("  There is no truth.\\n");
+}
+OUTPUT
+    end
+
     it "should process binary boolean logic" do
       <<INPUT.should compile_to(<<OUTPUT)
 {{if monkey and banana}}

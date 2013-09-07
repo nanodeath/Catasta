@@ -196,6 +196,30 @@ end
 OUTPUT
     end
 
+    it "should process elsif blocks" do
+      <<INPUT.should compile_to(<<OUTPUT)
+{{if monkey}}
+  Monkey is truthy.
+{{elsif dog}}
+  Dog is the truth
+{{elsif cat}}
+  Cat is the truth
+{{else}}
+  There is no truth.
+{{/if}}
+INPUT
+if(Catasta::Conditional.truthy(_params[:monkey]))
+  puts "  Monkey is truthy.\\n"
+elsif(Catasta::Conditional.truthy(_params[:dog]))
+  puts "  Dog is the truth\\n"
+elsif(Catasta::Conditional.truthy(_params[:cat]))
+  puts "  Cat is the truth\\n"
+else
+  puts "  There is no truth.\\n"
+end
+OUTPUT
+    end
+
     it "should process loops over maps" do
       <<INPUT.should compile_to(<<OUTPUT)
 <ol>
