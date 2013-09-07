@@ -180,6 +180,22 @@ end
 OUTPUT
     end
 
+    it "should process else blocks" do
+      <<INPUT.should compile_to(<<OUTPUT)
+{{if monkey}}
+  Monkey is truthy.
+{{else}}
+  Monkey is falsey.
+{{/if}}
+INPUT
+if(Catasta::Conditional.truthy(_params[:monkey]))
+  puts "  Monkey is truthy.\\n"
+else
+  puts "  Monkey is falsey.\\n"
+end
+OUTPUT
+    end
+
     it "should process loops over maps" do
       <<INPUT.should compile_to(<<OUTPUT)
 <ol>

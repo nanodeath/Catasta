@@ -100,9 +100,10 @@ class Transform < Parslet::Transform
   # Conditional
   rule(
     condition: simple(:condition),
+    else: subtree(:else_content),
     content: sequence(:nodes)
   ) {
-    ConditionalExpression.new(condition, nodes)
+    ConditionalExpression.new(condition, nodes, else_content)
   }
 
   # First conditional atom

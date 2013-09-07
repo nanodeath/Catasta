@@ -164,6 +164,22 @@ if(((_params['monkey'] === null) || (_params['monkey'] === false) || (_params['m
 OUTPUT
     end
 
+    it "should process else blocks" do
+      <<INPUT.should compile_to(<<OUTPUT)
+{{if monkey}}
+  Monkey is truthy.
+{{else}}
+  Monkey is falsey.
+{{/if}}
+INPUT
+if(((_params['monkey'] === true) || (typeof _params['monkey'] === "string" && _params['monkey'] !== "") || (typeof _params['monkey'] === "number" && _params['monkey'] !== 0) || (typeof _params['monkey'] === "object" && Object.keys(_params['monkey']).length > 0))) {
+  _arr.push("  Monkey is truthy.\\n");
+} else {
+  _arr.push("  Monkey is falsey.\\n");
+}
+OUTPUT
+    end
+
     it "should process binary boolean logic" do
       <<INPUT.should compile_to(<<OUTPUT)
 {{if monkey and banana}}
