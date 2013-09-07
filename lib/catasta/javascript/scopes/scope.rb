@@ -11,7 +11,7 @@ class Scope
     @values.has_key? v
   end
   def resolve(v)
-    raise
+    raise "abstract"
   end
   def get_resolve_count(v)
     @resolve_counter[v]

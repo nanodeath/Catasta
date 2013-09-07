@@ -1,4 +1,4 @@
- q<div>
+<div>
   {{= 1}}
   {{= "foo"}}
   <span>You are on page {{= page}}</span>

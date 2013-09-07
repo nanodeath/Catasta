@@ -5,16 +5,16 @@ Dir[File.join(File.dirname(__FILE__), "nodes", "**", "*.rb")].each {|f| require_
 module Catasta::JavaScript
 class Transform < Parslet::Transform
   rule(
-    expression: { 
-      ident: simple(:ident) 
+    expression: {
+      ident: simple(:ident)
     }
   ) {
     Code.new(VariableLookup.new(ident))
   }
 
   rule(
-    expression: { 
-      ident: simple(:ident) 
+    expression: {
+      ident: simple(:ident)
     }
   ) {
     Code.new(VariableLookup.new(ident))
@@ -35,12 +35,12 @@ class Transform < Parslet::Transform
   ) {
     Code.new(IntLiteral.new(literal))
   }
-  
+
   rule(
-    comment: { 
-      javascript: simple(:javascript) 
+    comment: {
+      javascript: simple(:javascript)
     }
-  ) { 
+  ) {
     ''
   }
 
@@ -51,7 +51,7 @@ class Transform < Parslet::Transform
   ) {
     TemplateInclude.new(partial_name)
   }
-  
+
   rule(
     loop: {
       i: {ident: simple(:i)},
@@ -72,22 +72,52 @@ class Transform < Parslet::Transform
   ) {
     LoopMap.new(loop_key, loop_value, VariableLookup.new(collection), nodes)
   }
-  
+
   rule(
-    condition: {
-      variable: {
-        ident: simple(:variable),
-      },
-      inverted: simple(:inverted)
-    },
+    atomic_condition: simple(:expression)
+  ) {
+    AtomicExpression.new(expression)
+  }
+
+  rule(
+    or: {
+      left: simple(:left),
+      right: simple(:right)
+    }
+  ) {
+    OrExpression.new(left, right)
+  }
+
+  rule(
+    and: {
+      left: simple(:left),
+      right: simple(:right)
+    }
+  ) {
+    AndExpression.new(left, right)
+  }
+
+  # Conditional
+  rule(
+    condition: simple(:condition),
     content: sequence(:nodes)
   ) {
-    Conditional.new(inverted, VariableLookup.new(variable), nodes)
+    ConditionalExpression.new(condition, nodes)
   }
-  
+
+  # First conditional atom
+  rule(
+      variable: {
+          ident: simple(:variable)
+        },
+      inverted: simple(:inverted)
+  ) {
+    ConditionalAtom.new(inverted, VariableLookup.new(variable))
+  }
+
   rule(
     text: simple(:text)
-  ) { 
+  ) {
     Text.new(text)
   }
   rule(

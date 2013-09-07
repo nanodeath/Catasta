@@ -17,7 +17,12 @@ end
 describe Catasta::Ruby do
   matcher :compile_to do |expected|
     match do |actual|
-      parsed = Catasta::Parser.new.parse(actual)
+      begin
+        parsed = Catasta::Parser.new.parse(actual)
+      rescue StandardError => e
+        puts e.cause.ascii_tree
+        raise e
+      end
       result = begin
         transform = Catasta::Ruby::Transform.new
         transform.apply(parsed).generate(outputter: PutsOutputter.new, path: File.dirname(__FILE__), transform: transform)
@@ -192,6 +197,85 @@ _params[:content].each_pair do |k, v|
   puts "</li>\\n"
 end
 puts "</ol>\\n"
+OUTPUT
+    end
+
+    it "should parse and statements" do
+      parser = Catasta::Parser.new
+      parser.logical_and_expression.parse("a and !b").should == {
+        and: {
+          left: {
+            inverted: nil,
+            variable: {
+              ident:"a"
+              }
+          }, right: {
+            inverted: "!",
+            variable: {
+              ident: "b"
+            }
+          }
+        }
+      }
+    end
+
+    it "should process binary boolean logic" do
+      <<INPUT.should compile_to(<<OUTPUT)
+{{if monkey and banana}}
+  Monkey and banana are truthy.
+{{/if}}
+{{if dog or banana}}
+  Dog or banana are truthy.
+{{/if}}
+INPUT
+if(Catasta::Conditional.truthy(_params[:monkey]) && Catasta::Conditional.truthy(_params[:banana]))
+  puts "  Monkey and banana are truthy.\\n"
+end
+if(Catasta::Conditional.truthy(_params[:dog]) || Catasta::Conditional.truthy(_params[:banana]))
+  puts "  Dog or banana are truthy.\\n"
+end
+OUTPUT
+    end
+
+    it "should process multiple binary boolean logic" do
+      <<INPUT.should compile_to(<<OUTPUT)
+{{if monkey and banana and cat}}
+  Monkey and banana and cat are truthy.
+{{/if}}
+INPUT
+if(Catasta::Conditional.truthy(_params[:monkey]) && Catasta::Conditional.truthy(_params[:banana]) && Catasta::Conditional.truthy(_params[:cat]))
+  puts "  Monkey and banana and cat are truthy.\\n"
+end
+OUTPUT
+    end
+
+    it "should process mixed multiple binary boolean logic" do
+      <<INPUT.should compile_to(<<OUTPUT)
+{{if monkey or banana and cat}}
+  Monkey or banana and cat are truthy.
+{{/if}}
+{{if monkey and banana or cat}}
+  Monkey and banana or cat are truthy.
+{{/if}}
+INPUT
+if(Catasta::Conditional.truthy(_params[:monkey]) || Catasta::Conditional.truthy(_params[:banana]) && Catasta::Conditional.truthy(_params[:cat]))
+  puts "  Monkey or banana and cat are truthy.\\n"
+end
+if(Catasta::Conditional.truthy(_params[:monkey]) && Catasta::Conditional.truthy(_params[:banana]) || Catasta::Conditional.truthy(_params[:cat]))
+  puts "  Monkey and banana or cat are truthy.\\n"
+end
+OUTPUT
+    end
+
+    it "should process scoped multiple binary boolean logic" do
+      <<INPUT.should compile_to(<<OUTPUT)
+{{if (monkey or banana) and cat}}
+  (Monkey or banana) and cat are truthy.
+{{/if}}
+INPUT
+if((Catasta::Conditional.truthy(_params[:monkey]) || Catasta::Conditional.truthy(_params[:banana])) && Catasta::Conditional.truthy(_params[:cat]))
+  puts "  (Monkey or banana) and cat are truthy.\\n"
+end
 OUTPUT
     end
 
