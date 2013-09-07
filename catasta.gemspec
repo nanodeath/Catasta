@@ -12,15 +12,12 @@ Gem::Specification.new do |s|
   s.email       = ["nanodeath@gmail.com"]
   s.homepage    = "http://github.com/nanodeath/Catasta"
   s.summary     = "Write-once, run everywhere templates"
-  # s.description = "Bundler manages an application's dependencies through its entire life, across many machines, systematically and repeatably"
+  s.description = "Write templates that compile down to various targets like Ruby and JavaScript.  Minimal logic allowed."
 
   s.required_rubygems_version = ">= 1.3.6"
 
-  s.add_development_dependency "rspec", "~> 2.12.0"
+  s.add_development_dependency "rspec", "~> 2.14.1"
 
-  s.add_dependency "json", "~> 1.7.5"
-  s.add_dependency "nokogiri", "~> 1.5.5"
-  s.add_dependency "term-ansicolor", "~> 1.0.7"
   s.add_dependency "parslet", "~> 1.5.0"
 
   s.files        = Dir.glob("{bin,lib}/**/*")# + %w(LICENSE README.md ROADMAP.md CHANGELOG.md)
