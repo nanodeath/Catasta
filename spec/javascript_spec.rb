@@ -52,7 +52,7 @@ OUTPUT
 Hello {{= name}}!
 INPUT
 _arr.push("Hello ");
-_arr.push(_params['name']);
+_arr.push(_params.name);
 _arr.push("!\\n");
 OUTPUT
     end
@@ -68,7 +68,7 @@ _arr.push(['name'].reduce(function(memo, field){
   } else {
     return "";
   }
-}, _params['person']));
+}, _params.person));
 _arr.push("!\\nThe weather is ");
 _arr.push(['today','seattle'].reduce(function(memo, field){
   if(memo){
@@ -76,7 +76,7 @@ _arr.push(['today','seattle'].reduce(function(memo, field){
   } else {
     return "";
   }
-}, _params['weather']));
+}, _params.weather));
 _arr.push(".\\n");
 OUTPUT
     end
@@ -110,7 +110,7 @@ OUTPUT
 </ol>
 INPUT
 _arr.push("<ol>\\n");
-(_params['content'] || []).forEach(function(c){
+(_params.content || []).forEach(function(c){
   _arr.push("  <li>");
   _arr.push(c);
   _arr.push("</li>\\n");
@@ -128,7 +128,7 @@ OUTPUT
 </ol>
 INPUT
 _arr.push("<ol>\\n");
-(_params['content'] || []).forEach(function(c, _c_index){
+(_params.content || []).forEach(function(c, _c_index){
   _arr.push("  <li>");
   _arr.push(_c_index);
   _arr.push(": ");
@@ -146,7 +146,7 @@ OUTPUT
   Monkey is truthy.
 {{/if}}
 INPUT
-if(_truthy(_params['monkey'])) {
+if(_truthy(_params.monkey)) {
   _arr.push("  Monkey is truthy.\\n");
 }
 OUTPUT
@@ -158,7 +158,7 @@ OUTPUT
   Monkey is falsey.
 {{/if}}
 INPUT
-if(_falsey(_params['monkey'])) {
+if(_falsey(_params.monkey)) {
   _arr.push("  Monkey is falsey.\\n");
 }
 OUTPUT
@@ -172,7 +172,7 @@ OUTPUT
   Monkey is falsey.
 {{/if}}
 INPUT
-if(_truthy(_params['monkey'])) {
+if(_truthy(_params.monkey)) {
   _arr.push("  Monkey is truthy.\\n");
 } else {
   _arr.push("  Monkey is falsey.\\n");
@@ -192,11 +192,11 @@ OUTPUT
   There is no truth.
 {{/if}}
 INPUT
-if(_truthy(_params['monkey'])) {
+if(_truthy(_params.monkey)) {
   _arr.push("  Monkey is truthy.\\n");
-} else if(_truthy(_params['dog'])) {
+} else if(_truthy(_params.dog)) {
   _arr.push("  Dog is the truth\\n");
-} else if(_truthy(_params['cat'])) {
+} else if(_truthy(_params.cat)) {
   _arr.push("  Cat is the truth\\n");
 } else {
   _arr.push("  There is no truth.\\n");
@@ -213,10 +213,10 @@ OUTPUT
   Dog or banana are truthy.
 {{/if}}
 INPUT
-if(_truthy(_params['monkey']) && _truthy(_params['banana'])) {
+if(_truthy(_params.monkey) && _truthy(_params.banana)) {
   _arr.push("  Monkey and banana are truthy.\\n");
 }
-if(_truthy(_params['dog']) || _truthy(_params['banana'])) {
+if(_truthy(_params.dog) || _truthy(_params.banana)) {
   _arr.push("  Dog or banana are truthy.\\n");
 }
 OUTPUT
@@ -228,7 +228,7 @@ OUTPUT
   Monkey and banana and cat are truthy.
 {{/if}}
 INPUT
-if(_truthy(_params['monkey']) && _truthy(_params['banana']) && _truthy(_params['cat'])) {
+if(_truthy(_params.monkey) && _truthy(_params.banana) && _truthy(_params.cat)) {
   _arr.push("  Monkey and banana and cat are truthy.\\n");
 }
 OUTPUT
@@ -243,10 +243,10 @@ OUTPUT
   Monkey and banana or cat are truthy.
 {{/if}}
 INPUT
-if(_truthy(_params['monkey']) || _truthy(_params['banana']) && _truthy(_params['cat'])) {
+if(_truthy(_params.monkey) || _truthy(_params.banana) && _truthy(_params.cat)) {
   _arr.push("  Monkey or banana and cat are truthy.\\n");
 }
-if(_truthy(_params['monkey']) && _truthy(_params['banana']) || _truthy(_params['cat'])) {
+if(_truthy(_params.monkey) && _truthy(_params.banana) || _truthy(_params.cat)) {
   _arr.push("  Monkey and banana or cat are truthy.\\n");
 }
 OUTPUT
@@ -258,7 +258,7 @@ OUTPUT
   (Monkey or banana) and cat are truthy.
 {{/if}}
 INPUT
-if((_truthy(_params['monkey']) || _truthy(_params['banana'])) && _truthy(_params['cat'])) {
+if((_truthy(_params.monkey) || _truthy(_params.banana)) && _truthy(_params.cat)) {
   _arr.push("  (Monkey or banana) and cat are truthy.\\n");
 }
 OUTPUT
@@ -273,8 +273,8 @@ OUTPUT
 </ol>
 INPUT
 _arr.push("<ol>\\n");
-Object.keys(_params['content']).forEach(function(k){
-  var v = _params['content'][k];
+Object.keys(_params.content).forEach(function(k){
+  var v = _params.content[k];
   _arr.push("  <li>");
   _arr.push(k);
   _arr.push(": ");
@@ -293,7 +293,7 @@ OUTPUT
 INPUT
 _arr.push('<div class="person">\\n  ');
 _arr.push("Name: ");
-_arr.push(_params['name']);
+_arr.push(_params.name);
 _arr.push("</div>\\n");
 OUTPUT
     end

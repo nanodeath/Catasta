@@ -7,7 +7,7 @@ class DefaultScope < Scope
   end
   def resolve(v)
     @resolve_counter[v] += 1
-    %{_params['#{v}']}
+    "_params.#{v}"
   end
 end
 end
