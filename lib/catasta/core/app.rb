@@ -1,8 +1,6 @@
 require_relative "parser"
 require_relative "../ruby/transform"
 require_relative "../ruby/writer"
-require_relative "../javascript/transform"
-require_relative "../javascript/writer"
 require 'pp'
 
 module Catasta
@@ -26,9 +24,9 @@ module Catasta
       ruby_code = ruby_ast.generate(merged_options)
       Ruby::Writer.new(merged_options).apply(ruby_code)
 
-      js_ast = JavaScript::Transform.new.apply(ast)
-      ruby_code = js_ast.generate(merged_options)
-      JavaScript::Writer.new(merged_options).apply(ruby_code)
+      # js_ast = JavaScript::Transform.new.apply(ast)
+      # ruby_code = js_ast.generate(merged_options)
+      # JavaScript::Writer.new(merged_options).apply(ruby_code)
     end
   end
 end

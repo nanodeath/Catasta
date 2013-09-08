@@ -20,7 +20,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency "parslet", "~> 1.5.0"
 
-  s.files        = Dir.glob("{bin,lib}/**/*")# + %w(LICENSE README.md ROADMAP.md CHANGELOG.md)
+  s.files        = Dir.glob("{bin,lib}/**/*") + %w(LICENSE)# + %w(README.md ROADMAP.md CHANGELOG.md)
   s.executables  = ['catasta']
   s.require_path = 'lib'
 end
